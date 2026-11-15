@@ -56,9 +56,12 @@ everything needed to author a bank, by hand or with an LLM:
 
 - `sample_question_bank.csv`: a complete, valid example that uses every feature (all three
   classification levels, single and multiple answers, 2 to 8 choices, quoting).
-- `QUESTION_WRITING_GUIDE.md`: the format rules, how the app treats questions (choices are
-  shuffled, so avoid "all of the above"), question-writing guidance, a checklist and a
-  prompt template to give an LLM along with the sample file.
+- `QUESTION_WRITING_GUIDE.md`: the rules for the LLM: how to research the subject, plan
+  modules and knowledge points, the CSV format, question-writing guidance and a checklist.
+- `PROMPT INSTRUCTION.md`: a prompt template that has the LLM research first, then output
+  only the CSV.
+- `HOW TO USE.md`: step-by-step instructions for you: filling in the prompt, saving the
+  reply, importing it and fixing rejected rows.
 
 The home page and the Import page have a **Download the question-writing kit** button that
 serves the whole folder as `question-writing-kit.zip`. The zip is built on each request, so

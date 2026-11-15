@@ -2,6 +2,7 @@ import io
 
 from sqlmodel import select
 
+from app.config import BASE_DIR
 from app.crud import import_csv_text, load_example_bank, question_count
 from app.models import Bank, Question
 
@@ -100,11 +101,12 @@ def test_writing_kit_zip(client):
     r = client.get("/question-writing-kit.zip")
     assert r.status_code == 200
     assert r.headers["content-type"] == "application/zip"
-    names = zipfile.ZipFile(io.BytesIO(r.content)).namelist()
-    assert sorted(names) == [
-        "question writing instructions/QUESTION_WRITING_GUIDE.md",
-        "question writing instructions/sample_question_bank.csv",
-    ]
+    names = set(zipfile.ZipFile(io.BytesIO(r.content)).namelist())
+    folder = "question writing instructions"
+    expected = {f"{folder}/{p.name}" for p in (BASE_DIR / folder).iterdir() if p.is_file()}
+    assert names == expected
+    assert f"{folder}/QUESTION_WRITING_GUIDE.md" in names
+    assert f"{folder}/sample_question_bank.csv" in names
 
 
 def test_writing_kit_linked_from_home_and_import(client):
