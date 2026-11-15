@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{{ heading }} · {{ bank.name }}{% endblock %}
+{% block content %}
+<h1>{{ heading }}</h1>
+
+{% if errors %}
+<article role="alert">
+  <ul>{% for e in errors %}<li class="wrong">{{ e }}</li>{% endfor %}</ul>
+</article>
+{% endif %}
+
+<form method="post" action="{{ action }}">
+  <div class="grid">
+    <label>Module
+      <select name="module_id"
+              hx-get="/banks/{{ bank.id }}/questions/point-options" hx-target="#knowledge-point" hx-trigger="change">
+        <option value="">General (no module)</option>
+        {% for m in bank.modules %}
+        <option value="{{ m.id }}" {% if values.module_id == m.id|string %}selected{% endif %}>{{ m.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Knowledge point
+      <select name="knowledge_point_id" id="knowledge-point">{% include "questions/_point_options.html" %}</select>
+    </label>
+  </div>
+  <p><small class="muted">Missing a module or knowledge point? <a href="/banks/{{ bank.id }}/topics">Add it on the Modules page.</a></small></p>
+
+  <label>Question
+    <textarea name="text" rows="3" required>{{ values.text }}</textarea>
+  </label>
+
+  <fieldset>
+    <legend>Choices: tick every correct answer (2–8 choices; blank rows are ignored)</legend>
+    <div id="choices">
+      {% for c in choices %}{% include "questions/_choice_field.html" %}{% endfor %}
+    </div>
+    <button type="button" class="secondary outline"
+            hx-get="/banks/{{ bank.id }}/questions/choice-field" hx-target="#choices" hx-swap="beforeend">+ Add choice</button>
+  </fieldset>
+
+  <label>Explanation (optional, shown after answering)
+    <textarea name="explanation" rows="3">{{ values.explanation }}</textarea>
+  </label>
+
+  <div class="actions">
+    <button type="submit">Save</button>
+    <a href="/banks/{{ bank.id }}/questions">Cancel</a>
+  </div>
+</form>
+{% endblock %}

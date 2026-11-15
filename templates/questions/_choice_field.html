@@ -1,0 +1,6 @@
+<div class="choice">
+  <label><input type="checkbox" name="choice_correct_{{ c.key }}" {% if c.correct %}checked{% endif %}> Correct</label>
+  <input type="text" name="choice_text_{{ c.key }}" value="{{ c.text }}" placeholder="Answer text" aria-label="Answer text">
+  <button type="button" class="secondary outline" aria-label="Remove choice"
+          hx-on:click="this.closest('.choice').remove()">✕</button>
+</div>

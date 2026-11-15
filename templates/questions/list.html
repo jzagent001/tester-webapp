@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Questions · {{ bank.name }}{% endblock %}
+{% block content %}
+<div class="actions">
+  <h1>Questions</h1>
+  <a href="/banks/{{ bank.id }}/questions/new{% if topic %}?topic={{ topic }}{% endif %}" role="button">Add question</a>
+</div>
+
+<form class="grid" action="/banks/{{ bank.id }}/questions" method="get"
+      hx-get="/banks/{{ bank.id }}/questions" hx-target="#question-rows" hx-trigger="input delay:300ms, submit"
+      hx-push-url="true">
+  <select name="topic" aria-label="Filter by topic">{% include "questions/_topic_select.html" %}</select>
+  <input type="search" name="q" value="{{ q }}" placeholder="Search question text" aria-label="Search question text">
+</form>
+
+<div class="overflow-auto">
+<table class="striped">
+  <thead><tr><th>Topic</th><th>Question</th><th>Choices</th><th></th></tr></thead>
+  <tbody id="question-rows">
+    {% include "questions/_rows.html" %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Modules · {{ bank.name }}{% endblock %}
+{% block content %}
+<hgroup>
+  <h1>Modules &amp; knowledge points</h1>
+  <p>Questions can be filed under a knowledge point, under a module only, or left general.
+     Deleting a module or knowledge point keeps its questions and makes them general.</p>
+</hgroup>
+
+{% if error %}<p class="wrong" role="alert">{{ error }}</p>{% endif %}
+
+{% for m in bank.modules %}
+{% set mcount = namespace(n=counts.get((m.id, None), 0)) %}
+{% for p in m.points %}{% set mcount.n = mcount.n + counts.get((m.id, p.id), 0) %}{% endfor %}
+<article id="module-{{ m.id }}">
+  <header>
+    <div class="inline">
+      <form method="post" action="/banks/{{ bank.id }}/modules/{{ m.id }}" class="inline" style="flex:1">
+        <input type="text" name="name" value="{{ m.name }}" aria-label="Module name" required>
+        <button type="submit" class="secondary outline">Rename</button>
+      </form>
+      <span class="muted">{{ mcount.n }} question{{ 's' if mcount.n != 1 }}</span>
+      <form method="post" action="/banks/{{ bank.id }}/modules/{{ m.id }}/move" class="inline">
+        <button name="direction" value="-1" class="secondary outline" aria-label="Move up" {% if loop.first %}disabled{% endif %}>↑</button>
+        <button name="direction" value="1" class="secondary outline" aria-label="Move down" {% if loop.last %}disabled{% endif %}>↓</button>
+      </form>
+      <form method="post" action="/banks/{{ bank.id }}/modules/{{ m.id }}/delete" class="inline"
+            onsubmit="return confirm('Delete module “{{ m.name|e }}” and its knowledge points? Its {{ mcount.n }} question(s) become general.')">
+        <button type="submit" class="secondary outline wrong" aria-label="Delete module">✕</button>
+      </form>
+    </div>
+  </header>
+
+  <table>
+    <thead><tr><th>Knowledge point</th><th class="num">Questions</th><th></th></tr></thead>
+    <tbody>
+    {% for p in m.points %}
+      {% set n = counts.get((m.id, p.id), 0) %}
+      <tr>
+        <td>
+          <form method="post" action="/banks/{{ bank.id }}/points/{{ p.id }}" class="inline">
+            <input type="text" name="name" value="{{ p.name }}" aria-label="Knowledge point name" required>
+            <input type="text" name="description" value="{{ p.description }}" placeholder="Description (optional)" aria-label="Description">
+            <button type="submit" class="secondary outline">Save</button>
+          </form>
+        </td>
+        <td class="num"><a href="/banks/{{ bank.id }}/questions?topic=k:{{ p.id }}">{{ n }}</a></td>
+        <td class="nowrap">
+          <form method="post" action="/banks/{{ bank.id }}/points/{{ p.id }}/move" class="inline" style="display:inline-flex">
+            <button name="direction" value="-1" class="secondary outline" aria-label="Move up" {% if loop.first %}disabled{% endif %}>↑</button>
+            <button name="direction" value="1" class="secondary outline" aria-label="Move down" {% if loop.last %}disabled{% endif %}>↓</button>
+          </form>
+          <form method="post" action="/banks/{{ bank.id }}/points/{{ p.id }}/delete" class="inline" style="display:inline-flex"
+                onsubmit="return confirm('Delete knowledge point “{{ p.name|e }}”? Its {{ n }} question(s) become general within {{ m.name|e }}.')">
+            <button type="submit" class="secondary outline" aria-label="Delete knowledge point">✕</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+      <tr>
+        <td class="muted">General (no knowledge point)</td>
+        <td class="num"><a href="/banks/{{ bank.id }}/questions?topic=mg:{{ m.id }}">{{ counts.get((m.id, None), 0) }}</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <form method="post" action="/banks/{{ bank.id }}/modules/{{ m.id }}/points" class="inline">
+    <input type="text" name="name" placeholder="New knowledge point" aria-label="New knowledge point" required>
+    <input type="text" name="description" placeholder="Description (optional)" aria-label="Description">
+    <button type="submit">Add</button>
+  </form>
+</article>
+{% endfor %}
+
+<article>
+  <header><strong>Add a module</strong></header>
+  <form method="post" action="/banks/{{ bank.id }}/modules" class="inline">
+    <input type="text" name="name" placeholder="Module name" aria-label="Module name" required>
+    <button type="submit">Add module</button>
+  </form>
+  <p><small class="muted">{{ counts.get((None, None), 0) }} general question(s) have no module.</small></p>
+</article>
+{% endblock %}

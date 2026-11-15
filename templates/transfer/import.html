@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Import · Self-Test{% endblock %}
+{% block content %}
+<h1>Import questions</h1>
+
+<article>
+  <header><strong>Import from CSV</strong></header>
+  <p>The file needs a header row. Column order doesn't matter, and names are not case-sensitive:</p>
+  <pre><code>{{ header }}</code></pre>
+  <ul>
+    <li><code>question</code>: required.</li>
+    <li><code>module</code>, <code>knowledge_point</code>: optional. Leave both blank for a general question, or give only a module.
+        New modules and knowledge points are created automatically. An older <code>topic</code> column is read as the module.</li>
+    <li><code>A</code>–<code>H</code>: answer choices. At least A and B are required; leave unused columns empty.</li>
+    <li><code>correct</code>: letter(s) of every correct choice, e.g. <code>B</code> or <code>A;C</code>.</li>
+    <li><code>explanation</code>: optional, shown after answering.</li>
+  </ul>
+  <p><a href="/import/sample.csv" download>Download the sample CSV</a></p>
+
+  <form method="post" action="/import" enctype="multipart/form-data"
+        hx-post="/import" hx-encoding="multipart/form-data" hx-target="#import-result">
+    <div class="grid">
+      <label>Import into
+        <select name="bank_id">
+          <option value="">A new bank…</option>
+          {% for b in banks %}<option value="{{ b.id }}" {% if b.id == selected_id %}selected{% endif %}>{{ b.name }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>New bank name (if importing into a new bank)
+        <input type="text" name="new_bank" placeholder="e.g. CCNA 200-301">
+      </label>
+    </div>
+    <input type="file" name="file" accept=".csv,text/csv" required aria-label="CSV file">
+    <label><input type="checkbox" name="skip_duplicates" value="true" checked> Skip questions whose text is already in the bank</label>
+    <button type="submit">Import</button>
+  </form>
+
+  <form method="post" action="/import/example" hx-post="/import/example" hx-target="#import-result">
+    <button type="submit" class="secondary outline">Load the example bank (Optical Networking Fundamentals)</button>
+  </form>
+
+  <div id="import-result">{% if result %}{% include "transfer/_result.html" %}{% endif %}</div>
+</article>
+
+<p class="muted">To export, open a bank and use <em>Export CSV</em> on its page. The export uses this same format.</p>
+{% endblock %}

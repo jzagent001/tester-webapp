@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Let HTMX swap 422 validation responses instead of ignoring them. -->
+  <meta name="htmx-config" content='{"responseHandling":[{"code":"204","swap":false},{"code":"[23]..","swap":true},{"code":"422","swap":true},{"code":"[45]..","swap":false,"error":true}]}'>
+  <title>{% block title %}Self-Test{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.1.1/css/pico.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js"></script>
+  <style>
+    .correct { color: var(--pico-ins-color); }
+    .wrong { color: var(--pico-del-color); }
+    .muted { color: var(--pico-muted-color); }
+    .choice { display: flex; gap: .75rem; align-items: center; margin-bottom: .5rem; }
+    .choice label { margin: 0; white-space: nowrap; }
+    .choice input[type=text] { flex: 1; margin: 0; }
+    .choice button { margin: 0; width: auto; padding: .4rem .8rem; }
+    .review-list { list-style: none; padding-left: 0; }
+    .review-list li { list-style: none; padding: .25rem 0; }
+    .actions { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+    .actions > * { margin: 0; }
+    .inline { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin: 0; }
+    .inline > * { margin: 0; width: auto; }
+    .inline input[type=text] { flex: 1; min-width: 10rem; }
+    .inline button { padding: .3rem .7rem; }
+    td.nowrap { white-space: nowrap; }
+    td.num, th.num { text-align: right; white-space: nowrap; }
+    .tree fieldset { margin-bottom: 1rem; }
+    .tree .leaves { padding-left: 1.75rem; }
+    tr.sub td:first-child { padding-left: 2rem; }
+    nav.bank-nav { border-bottom: 1px solid var(--pico-muted-border-color); margin-bottom: 1.5rem; }
+  </style>
+</head>
+<body>
+  <header class="container">
+    <nav>
+      <ul><li><a href="/"><strong>Self-Test</strong></a></li></ul>
+      <ul>
+        <li><a href="/">Banks</a></li>
+        <li><a href="/import">Import</a></li>
+      </ul>
+    </nav>
+    {% if bank %}
+    <nav class="bank-nav">
+      <ul><li><a href="/banks/{{ bank.id }}"><strong>{{ bank.name }}</strong></a></li></ul>
+      <ul>
+        <li><a href="/banks/{{ bank.id }}/quiz">Take a test</a></li>
+        <li><a href="/banks/{{ bank.id }}/questions">Questions</a></li>
+        <li><a href="/banks/{{ bank.id }}/topics">Modules</a></li>
+        <li><a href="/banks/{{ bank.id }}/settings">Settings</a></li>
+      </ul>
+    </nav>
+    {% endif %}
+  </header>
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

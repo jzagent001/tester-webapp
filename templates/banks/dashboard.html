@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}{{ bank.name }} · Self-Test{% endblock %}
+{% block content %}
+<hgroup>
+  <h1>{{ bank.name }}</h1>
+  {% if bank.description %}<p>{{ bank.description }}</p>{% endif %}
+</hgroup>
+
+{% if total == 0 %}
+<article>
+  <p>This bank has no questions yet.</p>
+  <div class="actions">
+    <a href="/import?bank={{ bank.id }}" role="button">Import a CSV</a>
+    <a href="/banks/{{ bank.id }}/questions/new">Add a question</a>
+    <a href="/banks/{{ bank.id }}/topics">Set up modules</a>
+  </div>
+</article>
+{% else %}
+<div class="grid">
+<article>
+  <header><strong>{{ total }} questions</strong></header>
+  <table>
+    <tbody>
+    {% for g in tree if g.count %}
+      <tr><td><a href="/banks/{{ bank.id }}/questions?topic={{ 'm:' ~ g.module_id if g.module_id else 'none' }}">{{ g.name }}</a></td><td class="num">{{ g.count }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <div class="actions">
+    <a href="/banks/{{ bank.id }}/quiz" role="button">Take a test</a>
+    <a href="/import?bank={{ bank.id }}">Import more</a>
+    <a href="/banks/{{ bank.id }}/export.csv">Export CSV</a>
+  </div>
+</article>
+
+<article>
+  <header><strong>Weakest topics</strong></header>
+  {% if weak %}
+  <table>
+    <thead><tr><th>Topic</th><th class="num">Correct</th></tr></thead>
+    <tbody>
+    {% for label, t in weak %}
+      <tr><td>{{ label }}</td><td class="num {{ 'wrong' if t.accuracy < 70 }}">{{ t.correct }}/{{ t.answered }} ({{ t.accuracy }}%)</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <small class="muted">Across every test on this bank; topics with at least 3 answers.</small>
+  {% else %}
+  <p class="muted">Answer a few questions and your weakest topics show up here.</p>
+  {% endif %}
+</article>
+</div>
+{% endif %}
+
+{% if attempts %}
+<h2>Recent tests</h2>
+<div class="overflow-auto">
+<table class="striped">
+  <thead><tr><th>Started</th><th>Scope</th><th class="num">Score</th><th></th></tr></thead>
+  <tbody>
+  {% for a in attempts %}
+    <tr>
+      <td class="nowrap">{{ a.started_at.strftime("%Y-%m-%d %H:%M") }} UTC</td>
+      <td>{{ (a.scope or "All topics")|truncate(80) }}</td>
+      <td class="num">{{ a.score }} / {{ a.total }}</td>
+      <td><a href="/quiz/{{ a.id }}/{{ 'results' if a.finished_at else 'q/1' }}">{{ "Review" if a.finished_at else "Continue" }}</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

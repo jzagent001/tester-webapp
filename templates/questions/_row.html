@@ -1,0 +1,10 @@
+<tr id="question-{{ q.id }}">
+  <td><small>{{ q.topic_label }}</small></td>
+  <td>{{ q.text|truncate(160) }}</td>
+  <td class="nowrap">{{ q.choices|length }} ({{ q.correct_ids|length }} correct)</td>
+  <td class="nowrap">
+    <a href="/banks/{{ bank.id }}/questions/{{ q.id }}/edit">Edit</a> ·
+    <a href="#" class="wrong" hx-delete="/banks/{{ bank.id }}/questions/{{ q.id }}" hx-target="closest tr"
+       hx-swap="outerHTML" hx-confirm="Delete this question?">Delete</a>
+  </td>
+</tr>

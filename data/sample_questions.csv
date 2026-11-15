@@ -1,0 +1,4 @@
+module,knowledge_point,question,A,B,C,D,E,F,correct,explanation
+Units,Power,"Single answer: what is 0 dBm in milliwatts?",0 mW,1 mW,10 mW,1000 mW,,,B,"Only one letter in the correct column, so the test shows radio buttons. Module and knowledge point are created automatically on import."
+Maths,,"Multiple answers: which of these are prime numbers?",2,4,5,9,11,15,A;C;E,"Several letters separated by ; make it a multi-answer (checkbox) question. A blank knowledge point makes it a general question within its module."
+,,"A general question: which of these is a primary colour of light?",Red,Yellow,Magenta,,,,A,"Leave module and knowledge point blank for a general question that belongs to no module."

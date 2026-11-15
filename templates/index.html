@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<hgroup>
+  <h1>Question banks</h1>
+  <p>Each bank is one exam or subject, organised into modules and knowledge points.</p>
+</hgroup>
+
+{% if banks %}
+<div class="overflow-auto">
+<table class="striped">
+  <thead><tr><th>Bank</th><th class="num">Questions</th><th></th></tr></thead>
+  <tbody>
+  {% for b, n in banks %}
+    <tr>
+      <td><a href="/banks/{{ b.id }}"><strong>{{ b.name }}</strong></a>
+        {% if b.description %}<br><small class="muted">{{ b.description|truncate(140) }}</small>{% endif %}</td>
+      <td class="num">{{ n }}</td>
+      <td class="nowrap">{% if n %}<a href="/banks/{{ b.id }}/quiz">Take a test</a>{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<article>
+  <p>No question banks yet. Create one below, <a href="/import">import a CSV</a>, or start with the example.</p>
+  <form method="post" action="/import/example">
+    <button type="submit" class="secondary">Load the example bank (Optical Networking Fundamentals, 110 questions)</button>
+  </form>
+</article>
+{% endif %}
+
+<article>
+  <header><strong>New bank</strong></header>
+  {% if error %}<p class="wrong" role="alert">{{ error }}</p>{% endif %}
+  <form method="post" action="/banks" class="inline">
+    <input type="text" name="name" value="{{ name }}" placeholder="e.g. AWS Solutions Architect" aria-label="Bank name" required>
+    <button type="submit">Create</button>
+  </form>
+</article>
+{% endblock %}

@@ -1,0 +1,12 @@
+<div role="status">
+  {% if result.imported %}<p class="correct">Imported {{ result.imported }} question{{ 's' if result.imported != 1 }} into
+    <a href="/banks/{{ target.id }}">{{ target.name }}</a>, which now has {{ total }}.</p>{% endif %}
+  {% if result.skipped %}<p>Skipped {{ result.skipped }} duplicate{{ 's' if result.skipped != 1 }}.</p>{% endif %}
+  {% if result.new_modules %}<p>New modules: {{ result.new_modules|join(", ") }}.</p>{% endif %}
+  {% if result.new_points %}<p>New knowledge points: {{ result.new_points|join(", ") }}.</p>{% endif %}
+  {% if target and not result.imported and not result.skipped and not result.errors %}<p>No questions found in the file.</p>{% endif %}
+  {% if result.errors %}
+    <p class="wrong">{{ result.errors|length }} problem{{ 's' if result.errors|length != 1 }}:</p>
+    <ul>{% for e in result.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+  {% endif %}
+</div>

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Settings · {{ bank.name }}{% endblock %}
+{% block content %}
+<h1>Bank settings</h1>
+
+{% if errors %}
+<article role="alert"><ul>{% for e in errors %}<li class="wrong">{{ e }}</li>{% endfor %}</ul></article>
+{% endif %}
+
+<form method="post" action="/banks/{{ bank.id }}/settings">
+  <label>Name <input type="text" name="name" value="{{ values.name }}" required></label>
+  <label>Description <textarea name="description" rows="3">{{ values.description }}</textarea></label>
+  <div class="grid">
+    <label>Default test length
+      <input type="number" name="quiz_length" min="1" value="{{ values.quiz_length }}" required>
+    </label>
+    <label>Pass mark (%, optional)
+      <input type="number" name="pass_mark" min="0" max="100" value="{{ values.pass_mark }}">
+    </label>
+  </div>
+  <div class="actions">
+    <button type="submit">Save</button>
+    <a href="/banks/{{ bank.id }}">Cancel</a>
+  </div>
+</form>
+
+<article>
+  <header><strong class="wrong">Delete this bank</strong></header>
+  <p>Removes every question, module, knowledge point and test result in it. This can't be undone.</p>
+  <form method="post" action="/banks/{{ bank.id }}/delete"
+        onsubmit="return confirm('Delete “{{ bank.name|e }}” and everything in it?')">
+    <button type="submit" class="secondary outline">Delete bank</button>
+  </form>
+</article>
+{% endblock %}

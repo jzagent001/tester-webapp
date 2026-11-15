@@ -1,0 +1,14 @@
+{# Options for a topic filter select. Needs `tree` and `topic` (the selected token). #}
+<option value="">All topics</option>
+{% for g in tree %}
+  {% if g.module_id %}
+  <optgroup label="{{ g.name }}">
+    <option value="m:{{ g.module_id }}" {% if topic == 'm:' ~ g.module_id %}selected{% endif %}>{{ g.name }}: everything ({{ g.count }})</option>
+    {% for leaf in g.leaves %}
+    <option value="{{ leaf.token }}" {% if topic == leaf.token %}selected{% endif %}>{{ leaf.label }} ({{ leaf.count }})</option>
+    {% endfor %}
+  </optgroup>
+  {% else %}
+    <option value="none" {% if topic == 'none' %}selected{% endif %}>General, no module ({{ g.count }})</option>
+  {% endif %}
+{% endfor %}

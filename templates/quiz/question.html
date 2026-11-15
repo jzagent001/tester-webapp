@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Question {{ n }} of {{ total }} · {{ bank.name }}{% endblock %}
+{% block content %}
+<p>Question {{ n }} of {{ total }}{% if attempt.scope %} · <small>{{ attempt.scope|truncate(100) }}</small>{% endif %}</p>
+<progress value="{{ n }}" max="{{ total }}"></progress>
+
+{% include "quiz/_card.html" %}
+
+<p><a href="/quiz/{{ attempt.id }}/results">Finish and see results</a></p>
+{% endblock %}

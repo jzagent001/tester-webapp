@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Results · {{ bank.name }}{% endblock %}
+{% block content %}
+<hgroup>
+  <h1>Results</h1>
+  <p>{{ attempt.scope or "All topics" }} · started {{ attempt.started_at.strftime("%Y-%m-%d %H:%M") }} UTC</p>
+</hgroup>
+
+<article>
+  <h2>{{ score }} / {{ total }} ({{ pct }}%)
+    {% if passed is not none %}<span class="{{ 'correct' if passed else 'wrong' }}">· {{ 'Pass' if passed else 'Below the pass mark' }} ({{ bank.pass_mark }}%)</span>{% endif %}
+  </h2>
+  <p>{{ answered }} answered, {{ total - answered }} skipped.</p>
+  <div class="actions">
+    <a href="/banks/{{ bank.id }}/quiz" role="button">Take another test</a>
+    <a href="/quiz/{{ attempt.id }}/q/1">Back to the questions</a>
+  </div>
+</article>
+
+<h2>By topic</h2>
+<div class="overflow-auto">
+<table>
+  <thead><tr><th>Module / knowledge point</th><th class="num">Correct</th><th class="num">Score</th></tr></thead>
+  <tbody>
+  {% for row in breakdown %}
+    <tr><td><strong>{{ row.name }}</strong></td><td class="num">{{ row.tally.correct }} / {{ row.tally.total }}</td>
+        <td class="num {{ 'wrong' if row.tally.pct < (bank.pass_mark or 70) }}"><strong>{{ row.tally.pct }}%</strong></td></tr>
+    {% if row.points|length > 1 or (row.points and row.points[0][0] != 'General') %}
+    {% for label, t in row.points %}
+    <tr class="sub"><td>{{ label }}</td><td class="num">{{ t.correct }} / {{ t.total }}</td>
+        <td class="num {{ 'wrong' if t.pct < (bank.pass_mark or 70) }}">{{ t.pct }}%</td></tr>
+    {% endfor %}
+    {% endif %}
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p><small class="muted">Skipped questions count as wrong.</small></p>
+
+{% if review %}
+<h2>Review ({{ review|length }})</h2>
+{% for r in review %}
+<article>
+  {% if r.question is none %}
+    <p>Question {{ r.n }} was deleted from the bank.</p>
+  {% else %}
+    {% set picked = r.item.selected %}
+    <header>
+      <small>Q{{ r.n }} · {{ r.question.topic_label }} ·
+        <span class="wrong">{{ 'Incorrect' if r.item.is_answered else 'Skipped' }}</span></small>
+      <p><strong>{{ r.question.text }}</strong></p>
+    </header>
+    <ul class="review-list">
+      {% for c in r.choices %}
+      <li class="{{ 'correct' if c.is_correct else ('wrong' if c.id in picked else '') }}">
+        {{ '✓' if c.is_correct else ('✗' if c.id in picked else '·') }}
+        {{ LETTERS[loop.index0] }}. {{ c.text }}{% if c.id in picked %} <small>(your answer)</small>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% if r.question.explanation %}<p>{{ r.question.explanation }}</p>{% endif %}
+  {% endif %}
+</article>
+{% endfor %}
+{% else %}
+<p class="correct">Nothing to review, every question correct.</p>
+{% endif %}
+{% endblock %}

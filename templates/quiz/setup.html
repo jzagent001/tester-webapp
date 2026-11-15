@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Take a test · {{ bank.name }}{% endblock %}
+{% block content %}
+<h1>Take a practice test</h1>
+
+{% if error %}<p class="wrong" role="alert">{{ error }}</p>{% endif %}
+
+{% if total == 0 %}
+<p>No questions yet. <a href="/import?bank={{ bank.id }}">Import some</a> or <a href="/banks/{{ bank.id }}/questions/new">add one</a>.</p>
+{% else %}
+<form method="post" action="/banks/{{ bank.id }}/quiz" class="tree">
+  <p>Pick the topics to draw from. <strong>Leave everything unticked to use all {{ total }} questions.</strong></p>
+  {% for g in tree if g.count %}
+  <fieldset>
+    {% if g.module_id %}
+    <label><input type="checkbox" class="module-toggle"
+                  onchange="this.closest('fieldset').querySelectorAll('.leaves input').forEach(i => { if (!i.disabled) i.checked = this.checked })">
+      <strong>{{ g.name }}</strong> <span class="muted">({{ g.count }})</span></label>
+    <div class="leaves">
+      {% for leaf in g.leaves %}
+      <label><input type="checkbox" name="scope" value="{{ leaf.token }}"
+                    {% if leaf.token in selected %}checked{% endif %} {% if not leaf.count %}disabled{% endif %}>
+        {{ leaf.label }} <span class="muted">({{ leaf.count }})</span></label>
+      {% endfor %}
+    </div>
+    {% else %}
+    {% set leaf = g.leaves[0] %}
+    <label><input type="checkbox" name="scope" value="{{ leaf.token }}" {% if leaf.token in selected %}checked{% endif %}>
+      <strong>General questions</strong> (no module) <span class="muted">({{ leaf.count }})</span></label>
+    {% endif %}
+  </fieldset>
+  {% endfor %}
+
+  <label>Number of questions
+    <input type="number" name="count" min="1" max="{{ total }}" value="{{ default_count }}">
+    <small>If you ask for more than the selection has, you get all of them.</small>
+  </label>
+  <button type="submit">Start</button>
+</form>
+{% endif %}
+{% endblock %}

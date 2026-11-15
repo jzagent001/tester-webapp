@@ -1,0 +1,49 @@
+<article id="card">
+{% if question is none %}
+  <p>This question has been deleted from the bank.</p>
+  <a href="{{ next_url }}" role="button">Continue</a>
+{% else %}
+  {% set n_correct = question.correct_ids|length %}
+  <header>
+    <small>{{ question.topic_label }}</small>
+    <p><strong>{{ question.text }}</strong></p>
+    {% if n_correct > 1 %}<p><em>Choose {{ n_correct }}.</em></p>{% endif %}
+  </header>
+
+  {% if not item.is_answered %}
+  <form method="post" action="/quiz/{{ attempt.id }}/q/{{ n }}"
+        hx-post="/quiz/{{ attempt.id }}/q/{{ n }}" hx-target="#card" hx-swap="outerHTML">
+    {% if error %}<p class="wrong" role="alert">{{ error }}</p>{% endif %}
+    <fieldset>
+      {% for c in choices %}
+      <label>
+        <input type="{{ 'checkbox' if n_correct > 1 else 'radio' }}" name="choice" value="{{ c.id }}">
+        {{ LETTERS[loop.index0] }}. {{ c.text }}
+      </label>
+      {% endfor %}
+    </fieldset>
+    <div class="actions">
+      <button type="submit">Submit answer</button>
+      <a href="{{ next_url }}">Skip</a>
+    </div>
+  </form>
+  {% else %}
+  {% set picked = item.selected %}
+  <ul class="review-list">
+    {% for c in choices %}
+    <li class="{{ 'correct' if c.is_correct else ('wrong' if c.id in picked else '') }}">
+      {{ '✓' if c.is_correct else ('✗' if c.id in picked else '·') }}
+      {{ LETTERS[loop.index0] }}. {{ c.text }}{% if c.id in picked %} <small>(your answer)</small>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  <p class="{{ 'correct' if item.is_correct else 'wrong' }}">
+    <strong>{{ 'Correct!' if item.is_correct else 'Incorrect.' }}</strong>
+  </p>
+  {% if question.explanation %}<p>{{ question.explanation }}</p>{% endif %}
+  <footer>
+    <a href="{{ next_url }}" role="button">{{ 'Next question →' if n < total else 'See results' }}</a>
+  </footer>
+  {% endif %}
+{% endif %}
+</article>
