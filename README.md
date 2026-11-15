@@ -10,11 +10,29 @@ FastAPI + Jinja2 + HTMX + Pico.css (both from a CDN, no build step), stored in S
 
 ```bash
 uv sync
-uv run fastapi dev app/main.py      # http://127.0.0.1:8000
-uv run python -m app.seed           # optional: load the example bank (Optical Networking Fundamentals, 110 questions)
+export SINGLE_USER_EMAIL=you@example.com   # who you are when running locally (see "Users")
+uv run fastapi dev app/main.py             # http://127.0.0.1:8000
+uv run python -m app.seed                  # optional: load the example bank (Optical Networking Fundamentals, 110 questions)
 ```
 
-The database is `app.db` in the project root; set `DATABASE_URL` to use another.
+The database is `app.db` in the project root; set `DATABASE_URL` to use another. Schema
+migrations run automatically at startup (or `uv run python -m app.migrate`).
+
+## Users
+
+The app has no accounts or passwords. Every bank belongs to one user, identified by email,
+and nobody else can see it or their test results. Who you are depends on `AUTH_MODE`:
+
+- `single` (default): everyone is `SINGLE_USER_EMAIL`. For local use and a LAN trial.
+- `cloudflare`: users sign in through Cloudflare Access with an email code, and the app
+  verifies Cloudflare's signed token on every request.
+
+[DEPLOY.md](DEPLOY.md) covers running it in Docker on Unraid and putting it behind a
+Cloudflare Tunnel + Access.
+
+**Upgrading a database from before users existed** (e.g. your old local `app.db`): the first
+start assigns its banks to `OWNER_EMAIL`, falling back to `SINGLE_USER_EMAIL`, and refuses to
+start if neither is set.
 
 ## Test
 

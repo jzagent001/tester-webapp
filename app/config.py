@@ -25,3 +25,31 @@ EXAMPLE_BANK = {
         DATA_DIR / "examples" / "optical_networking_hard_questions.csv",
     ],
 }
+
+# --- Sign-in -------------------------------------------------------------------------
+# AUTH_MODE=single      everyone is SINGLE_USER_EMAIL (local use, or a LAN trial).
+# AUTH_MODE=cloudflare  users sign in through Cloudflare Access; the app verifies the
+#                       Cf-Access-Jwt-Assertion token Cloudflare adds to every request.
+AUTH_MODE = os.environ.get("AUTH_MODE", "single").strip().lower()
+# Use the email you will later sign in with through Cloudflare, so your banks carry over.
+SINGLE_USER_EMAIL = os.environ.get("SINGLE_USER_EMAIL", "").strip().lower()
+CF_ACCESS_TEAM_DOMAIN = os.environ.get("CF_ACCESS_TEAM_DOMAIN", "").strip()  # myteam.cloudflareaccess.com
+CF_ACCESS_AUD = os.environ.get("CF_ACCESS_AUD", "").strip()  # the Access application's AUD tag
+
+MAX_UPLOAD_BYTES = 2 * 1024 * 1024
+
+
+def settings_errors() -> list[str]:
+    """Problems that stop the app from starting."""
+    if AUTH_MODE == "single":
+        return [] if SINGLE_USER_EMAIL else ["AUTH_MODE=single needs SINGLE_USER_EMAIL."]
+    if AUTH_MODE == "cloudflare":
+        return [
+            f"AUTH_MODE=cloudflare needs {name}."
+            for name, value in (
+                ("CF_ACCESS_TEAM_DOMAIN", CF_ACCESS_TEAM_DOMAIN),
+                ("CF_ACCESS_AUD", CF_ACCESS_AUD),
+            )
+            if not value
+        ]
+    return [f"AUTH_MODE must be 'single' or 'cloudflare', not {AUTH_MODE!r}."]

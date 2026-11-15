@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import ColumnElement, and_, false, or_
 from sqlmodel import Session, col, select
 
-from app.models import Attempt, AttemptItem, Bank, Question
+from app.models import Attempt, AttemptItem, Bank, Question, User
 
 GENERAL = "General"
 
@@ -192,14 +192,18 @@ def breakdown(bank: Bank, items: Iterable[AttemptItem]) -> list[BreakdownRow]:
 
 
 def weak_points(
-    session: Session, bank: Bank, min_answered: int = 3, limit: int = 5
+    session: Session, bank: Bank, user: User, min_answered: int = 3, limit: int = 5
 ) -> list[tuple[str, Tally]]:
-    """The topics with the lowest accuracy over every test taken on this bank."""
+    """This user's lowest-accuracy topics over every test they took on this bank."""
     module_names, point_names, _ = _names(bank)
     items = session.exec(
         select(AttemptItem)
         .join(Attempt)
-        .where(Attempt.bank_id == bank.id, col(AttemptItem.is_correct).is_not(None))
+        .where(
+            Attempt.bank_id == bank.id,
+            Attempt.user_id == user.id,
+            col(AttemptItem.is_correct).is_not(None),
+        )
     ).all()
     tallies: dict[tuple[int | None, int | None], Tally] = defaultdict(Tally)
     for item in items:

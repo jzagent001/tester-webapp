@@ -5,9 +5,10 @@ from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session, select
 
+from app.auth import CurrentUser
 from app.crud import classification_counts
 from app.db import SessionDep
-from app.models import Attempt, AttemptItem, Bank, Choice, Question, utcnow
+from app.models import Attempt, AttemptItem, Bank, Choice, Question, User, utcnow
 from app.templating import get_bank, is_htmx, templates
 from app.topics import breakdown, scope_label, tokens_clause, topic_tree
 
@@ -39,17 +40,18 @@ def _setup_page(
     )
 
 
-def _get_attempt(session: Session, attempt_id: int) -> Attempt:
+def _get_attempt(session: Session, user: User, attempt_id: int) -> Attempt:
+    """A test, if this user took it (404 otherwise, like get_bank)."""
     attempt = session.get(Attempt, attempt_id)
-    if attempt is None:
+    if attempt is None or attempt.user_id != user.id:
         raise HTTPException(status_code=404, detail="Test not found")
     return attempt
 
 
 def _load_step(
-    session: Session, attempt_id: int, n: int
+    session: Session, user: User, attempt_id: int, n: int
 ) -> tuple[Attempt, AttemptItem, Question | None]:
-    attempt = _get_attempt(session, attempt_id)
+    attempt = _get_attempt(session, user, attempt_id)
     if not 1 <= n <= attempt.total:
         raise HTTPException(status_code=404, detail="No such question in this test")
     item = attempt.items[n - 1]
@@ -87,19 +89,20 @@ def _card_context(
 
 
 @router.get("/banks/{bank_id}/quiz")
-def quiz_setup(request: Request, session: SessionDep, bank_id: int):
-    return _setup_page(request, session, get_bank(session, bank_id))
+def quiz_setup(request: Request, session: SessionDep, user: CurrentUser, bank_id: int):
+    return _setup_page(request, session, get_bank(session, user, bank_id))
 
 
 @router.post("/banks/{bank_id}/quiz")
 def start_quiz(
     request: Request,
     session: SessionDep,
+    user: CurrentUser,
     bank_id: int,
     scope: Annotated[list[str], Form()] = [],
     count: Annotated[int, Form(ge=1)] = 1,
 ):
-    bank = get_bank(session, bank_id)
+    bank = get_bank(session, user, bank_id)
     stmt = select(Question.id, Question.module_id, Question.knowledge_point_id).where(
         Question.bank_id == bank.id
     )
@@ -116,7 +119,7 @@ def start_quiz(
             status_code=422,
         )
     chosen = random.sample(list(rows), min(count, len(rows)))
-    attempt = Attempt(bank_id=bank.id, scope=scope_label(bank, scope))
+    attempt = Attempt(bank_id=bank.id, user_id=user.id, scope=scope_label(bank, scope))
     attempt.items = [
         AttemptItem(position=i, question_id=qid, module_id=mid, knowledge_point_id=kid)
         for i, (qid, mid, kid) in enumerate(chosen, start=1)
@@ -128,8 +131,10 @@ def start_quiz(
 
 
 @router.get("/quiz/{attempt_id}/q/{n}")
-def show_question(request: Request, session: SessionDep, attempt_id: int, n: int):
-    attempt, item, question = _load_step(session, attempt_id, n)
+def show_question(
+    request: Request, session: SessionDep, user: CurrentUser, attempt_id: int, n: int
+):
+    attempt, item, question = _load_step(session, user, attempt_id, n)
     return templates.TemplateResponse(
         request, "quiz/question.html", _card_context(attempt, n, item, question)
     )
@@ -139,11 +144,12 @@ def show_question(request: Request, session: SessionDep, attempt_id: int, n: int
 def submit_answer(
     request: Request,
     session: SessionDep,
+    user: CurrentUser,
     attempt_id: int,
     n: int,
     choice: Annotated[list[int], Form()] = [],
 ):
-    attempt, item, question = _load_step(session, attempt_id, n)
+    attempt, item, question = _load_step(session, user, attempt_id, n)
     if question is None:
         raise HTTPException(status_code=404, detail="This question has been deleted")
     template = "quiz/_card.html" if is_htmx(request) else "quiz/question.html"
@@ -171,8 +177,8 @@ def submit_answer(
 
 
 @router.get("/quiz/{attempt_id}/results")
-def results(request: Request, session: SessionDep, attempt_id: int):
-    attempt = _get_attempt(session, attempt_id)
+def results(request: Request, session: SessionDep, user: CurrentUser, attempt_id: int):
+    attempt = _get_attempt(session, user, attempt_id)
     if attempt.finished_at is None:
         attempt.finished_at = utcnow()
         session.add(attempt)

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session
 
+from app.auth import CurrentUser
 from app.crud import (
     add_module,
     add_point,
@@ -53,13 +54,13 @@ Direction = Annotated[int, Form(ge=-1, le=1)]
 
 
 @router.get("/topics")
-def topics_page(request: Request, session: SessionDep, bank_id: int):
-    return _page(request, session, get_bank(session, bank_id))
+def topics_page(request: Request, session: SessionDep, user: CurrentUser, bank_id: int):
+    return _page(request, session, get_bank(session, user, bank_id))
 
 
 @router.post("/modules")
-def create_module(request: Request, session: SessionDep, bank_id: int, name: Name = ""):
-    bank = get_bank(session, bank_id)
+def create_module(request: Request, session: SessionDep, user: CurrentUser, bank_id: int, name: Name = ""):
+    bank = get_bank(session, user, bank_id)
     if error := module_name_error(bank, name):
         return _page(request, session, bank, error)
     module = add_module(session, bank, name)
@@ -69,9 +70,9 @@ def create_module(request: Request, session: SessionDep, bank_id: int, name: Nam
 
 @router.post("/modules/{module_id}")
 def rename_module(
-    request: Request, session: SessionDep, bank_id: int, module_id: int, name: Name = ""
+    request: Request, session: SessionDep, user: CurrentUser, bank_id: int, module_id: int, name: Name = ""
 ):
-    bank = get_bank(session, bank_id)
+    bank = get_bank(session, user, bank_id)
     module = _module(session, bank, module_id)
     if error := module_name_error(bank, name, current=module):
         return _page(request, session, bank, error)
@@ -82,16 +83,16 @@ def rename_module(
 
 
 @router.post("/modules/{module_id}/move")
-def move_module(session: SessionDep, bank_id: int, module_id: int, direction: Direction = 0):
-    bank = get_bank(session, bank_id)
+def move_module(session: SessionDep, user: CurrentUser, bank_id: int, module_id: int, direction: Direction = 0):
+    bank = get_bank(session, user, bank_id)
     module = _module(session, bank, module_id)
     move(session, bank.modules, module, direction)
     return _back(bank, f"#module-{module.id}")
 
 
 @router.post("/modules/{module_id}/delete")
-def delete_module(session: SessionDep, bank_id: int, module_id: int):
-    bank = get_bank(session, bank_id)
+def delete_module(session: SessionDep, user: CurrentUser, bank_id: int, module_id: int):
+    bank = get_bank(session, user, bank_id)
     session.delete(_module(session, bank, module_id))
     session.commit()
     return _back(bank)
@@ -101,12 +102,13 @@ def delete_module(session: SessionDep, bank_id: int, module_id: int):
 def create_point(
     request: Request,
     session: SessionDep,
+    user: CurrentUser,
     bank_id: int,
     module_id: int,
     name: Name = "",
     description: Name = "",
 ):
-    bank = get_bank(session, bank_id)
+    bank = get_bank(session, user, bank_id)
     module = _module(session, bank, module_id)
     if error := point_name_error(module, name):
         return _page(request, session, bank, error)
@@ -119,12 +121,13 @@ def create_point(
 def update_point(
     request: Request,
     session: SessionDep,
+    user: CurrentUser,
     bank_id: int,
     point_id: int,
     name: Name = "",
     description: Name = "",
 ):
-    bank = get_bank(session, bank_id)
+    bank = get_bank(session, user, bank_id)
     point = _point(session, bank, point_id)
     if error := point_name_error(point.module, name, current=point):
         return _page(request, session, bank, error)
@@ -136,16 +139,16 @@ def update_point(
 
 
 @router.post("/points/{point_id}/move")
-def move_point(session: SessionDep, bank_id: int, point_id: int, direction: Direction = 0):
-    bank = get_bank(session, bank_id)
+def move_point(session: SessionDep, user: CurrentUser, bank_id: int, point_id: int, direction: Direction = 0):
+    bank = get_bank(session, user, bank_id)
     point = _point(session, bank, point_id)
     move(session, point.module.points, point, direction)
     return _back(bank, f"#module-{point.module_id}")
 
 
 @router.post("/points/{point_id}/delete")
-def delete_point(session: SessionDep, bank_id: int, point_id: int):
-    bank = get_bank(session, bank_id)
+def delete_point(session: SessionDep, user: CurrentUser, bank_id: int, point_id: int):
+    bank = get_bank(session, user, bank_id)
     point = _point(session, bank, point_id)
     module_id = point.module_id
     session.delete(point)

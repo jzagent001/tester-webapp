@@ -9,10 +9,23 @@ from sqlmodel import Session, SQLModel, create_engine
 from app.config import DATABASE_URL
 
 
-def _enable_foreign_keys(dbapi_connection, _record) -> None:
+def _sqlite_pragmas(dbapi_connection, _record) -> None:
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
+    # WAL lets readers and the (single) writer work at the same time, and waiting up to
+    # 5 s for a lock beats failing with "database is locked" when two users save at once.
+    cursor.execute("PRAGMA busy_timeout=5000")
     cursor.close()
+
+
+def enable_wal(url: str) -> None:
+    """WAL mode is a property of the database file, so set it once at startup."""
+    if url.startswith("sqlite") and url not in ("sqlite://", "sqlite:///:memory:"):
+        import sqlite3
+
+        path = url.removeprefix("sqlite:///")
+        with sqlite3.connect(path) as conn:
+            conn.execute("PRAGMA journal_mode=WAL")
 
 
 def make_engine(url: str) -> Engine:
@@ -24,7 +37,7 @@ def make_engine(url: str) -> Engine:
             kwargs["poolclass"] = StaticPool
     engine = create_engine(url, **kwargs)
     if url.startswith("sqlite"):
-        event.listen(engine, "connect", _enable_foreign_keys)
+        event.listen(engine, "connect", _sqlite_pragmas)
     return engine
 
 

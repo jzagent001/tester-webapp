@@ -33,10 +33,8 @@ def test_import_reuses_existing_topics(session, bank, topics):
     assert result.new_modules == [] and result.new_points == []
 
 
-def test_duplicates_are_scoped_to_the_bank(session, bank):
-    other = Bank(name="Other")
-    session.add(other)
-    session.commit()
+def test_duplicates_are_scoped_to_the_bank(session, bank, make_bank):
+    other = make_bank("Other")
     import_csv_text(session, bank, CSV)
     again = import_csv_text(session, bank, CSV, skip_duplicates=True)
     assert (again.imported, again.skipped) == (0, 4)
@@ -44,12 +42,12 @@ def test_duplicates_are_scoped_to_the_bank(session, bank):
     assert elsewhere.imported == 4
 
 
-def test_example_bank_loads_once(session):
-    bank, result = load_example_bank(session)
+def test_example_bank_loads_once(session, user):
+    bank, result = load_example_bank(session, user)
     assert result.errors == []
     assert result.imported == 110
     assert len(bank.modules) == 5
-    _, again = load_example_bank(session)
+    _, again = load_example_bank(session, user)
     assert (again.imported, again.skipped) == (0, 110)
     assert len(session.exec(select(Bank)).all()) == 1
 
@@ -84,10 +82,8 @@ def test_upload_rejects_non_utf8(client, bank):
     assert "not UTF-8" in r.text
 
 
-def test_export_is_per_bank(client, session, bank, make_question):
-    other = Bank(name="Other")
-    session.add(other)
-    session.commit()
+def test_export_is_per_bank(client, session, bank, make_question, make_bank):
+    other = make_bank("Other")
     make_question("Mine")
     make_question("Theirs", target=other)
     r = client.get(f"/banks/{bank.id}/export.csv")

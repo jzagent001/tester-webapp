@@ -1,0 +1,22 @@
+# For Unraid's "Docker Compose Manager" plugin, or `docker compose up -d --build`.
+# See DEPLOY.md for the full walk-through.
+services:
+  tester-webapp:
+    build: .
+    image: tester-webapp:latest
+    container_name: tester-webapp
+    restart: unless-stopped
+    ports:
+      - "8765:8000"          # http://<nas-ip>:8765
+    volumes:
+      # Keep the database on the cache pool, not /mnt/user (SQLite and Unraid's FUSE
+      # layer don't mix well). The folder must be writable by 99:100 (nobody:users).
+      - /mnt/cache/appdata/tester-webapp:/data
+    environment:
+      # --- Phase 1: LAN trial, everyone is you ---
+      AUTH_MODE: single
+      SINGLE_USER_EMAIL: you@example.com     # the email you'll later sign in with
+      # --- Phase 2: behind Cloudflare Access (comment out the two lines above) ---
+      # AUTH_MODE: cloudflare
+      # CF_ACCESS_TEAM_DOMAIN: yourteam.cloudflareaccess.com
+      # CF_ACCESS_AUD: paste-the-application-audience-tag-here

@@ -8,6 +8,12 @@
   <title>{% block title %}Self-Test{% endblock %}</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.1.1/css/pico.min.css">
   <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js"></script>
+  <script>
+    // When a Cloudflare Access session expires, background (HTMX) requests get redirected
+    // to the Cloudflare sign-in page on another domain, which the browser blocks, so
+    // buttons would silently do nothing. Reload the page instead: that shows the sign-in.
+    document.addEventListener("htmx:sendError", () => window.location.reload());
+  </script>
   <style>
     .correct { color: var(--pico-ins-color); }
     .wrong { color: var(--pico-del-color); }
@@ -39,6 +45,10 @@
       <ul>
         <li><a href="/">Banks</a></li>
         <li><a href="/import">Import</a></li>
+        {% if request.state.user %}
+        <li><small class="muted" title="Signed in as {{ request.state.user.email }}">{{ request.state.user.email }}</small></li>
+        {% if auth_mode() == "cloudflare" %}<li><a href="/cdn-cgi/access/logout"><small>Sign out</small></a></li>{% endif %}
+        {% endif %}
       </ul>
     </nav>
     {% if bank %}

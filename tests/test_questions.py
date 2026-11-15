@@ -1,7 +1,7 @@
 from sqlmodel import select
 
 from app.crud import add_module
-from app.models import Bank, Question
+from app.models import Question
 from tests.conftest import HTMX, form_for
 
 
@@ -35,11 +35,9 @@ def test_point_from_another_module_rejected(client, session, bank, topics):
     assert "does not belong to the chosen module" in r.text
 
 
-def test_module_from_another_bank_rejected(client, session, topics):
+def test_module_from_another_bank_rejected(client, session, topics, make_bank):
     module, _, _ = topics
-    other = Bank(name="Other")
-    session.add(other)
-    session.commit()
+    other = make_bank("Other")
     r = client.post(f"/banks/{other.id}/questions", data=form_for(module_id=module.id))
     assert r.status_code == 422
     assert "does not belong to this bank" in r.text
@@ -100,11 +98,9 @@ def test_filter_by_topic_tokens(client, bank, topics, make_question):
     assert len(texts("")) == 4
 
 
-def test_questions_of_another_bank_are_404(client, session, make_question):
+def test_questions_of_another_bank_are_404(client, session, make_question, make_bank):
     q = make_question()
-    other = Bank(name="Other")
-    session.add(other)
-    session.commit()
+    other = make_bank("Other")
     assert client.get(f"/banks/{other.id}/questions/{q.id}/edit").status_code == 404
     assert client.delete(f"/banks/{other.id}/questions/{q.id}").status_code == 404
 

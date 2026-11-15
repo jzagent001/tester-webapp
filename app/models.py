@@ -1,5 +1,8 @@
 """Database tables.
 
+Every Bank has an owner (a User, identified by email; see app/auth.py) and only its
+owner can see or change it. Test attempts belong to the user who took them.
+
 A Bank (one exam or subject) holds Modules, each Module holds KnowledgePoints.
 Every Question belongs to a bank and is classified at one of three levels:
 
@@ -25,9 +28,24 @@ def _ids(text: str) -> list[int]:
     return [int(x) for x in text.split(",") if x]
 
 
-class Bank(SQLModel, table=True):
+class User(SQLModel, table=True):
+    """Someone who signed in. Created automatically on first request; no passwords here."""
+
+    __tablename__ = "app_user"
+
     id: int | None = Field(default=None, primary_key=True)
-    name: str = Field(unique=True)
+    email: str = Field(unique=True)  # lower-case
+    created_at: datetime = Field(default_factory=utcnow)
+    last_seen_at: datetime = Field(default_factory=utcnow)
+
+
+class Bank(SQLModel, table=True):
+    # Names are unique per owner (the app also compares them case-insensitively).
+    __table_args__ = (UniqueConstraint("owner_id", "name"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    owner_id: int = Field(foreign_key="app_user.id", ondelete="CASCADE", index=True)
+    name: str
     description: str = ""
     quiz_length: int = 20
     pass_mark: int | None = None  # percent; None means no pass/fail verdict
@@ -119,6 +137,7 @@ class Choice(SQLModel, table=True):
 class Attempt(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     bank_id: int = Field(foreign_key="bank.id", ondelete="CASCADE", index=True)
+    user_id: int = Field(foreign_key="app_user.id", ondelete="CASCADE", index=True)  # who took it
     scope: str = ""  # human-readable description of what was selected; "" means everything
     started_at: datetime = Field(default_factory=utcnow)
     finished_at: datetime | None = None

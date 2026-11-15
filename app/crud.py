@@ -2,7 +2,7 @@ from sqlmodel import Session, col, func, select
 
 from app.config import EXAMPLE_BANK
 from app.csv_io import ImportResult, QuestionData, parse_csv
-from app.models import Bank, Choice, KnowledgePoint, Module, Question
+from app.models import Bank, Choice, KnowledgePoint, Module, Question, User
 
 
 def normalize(text: str) -> str:
@@ -196,15 +196,19 @@ def import_csv_text(
     return import_questions(session, bank, items, skip_duplicates, result)
 
 
-def get_bank_by_name(session: Session, name: str) -> Bank | None:
+def get_bank_by_name(session: Session, owner_id: int, name: str) -> Bank | None:
+    """This owner's bank with that name, compared case- and whitespace-insensitively."""
     key = normalize(name)
-    return next((b for b in session.exec(select(Bank)).all() if normalize(b.name) == key), None)
+    banks = session.exec(select(Bank).where(Bank.owner_id == owner_id)).all()
+    return next((b for b in banks if normalize(b.name) == key), None)
 
 
-def load_example_bank(session: Session) -> tuple[Bank, ImportResult]:
-    bank = get_bank_by_name(session, EXAMPLE_BANK["name"])
+def load_example_bank(session: Session, owner: User) -> tuple[Bank, ImportResult]:
+    """Load (or top up) the owner's own copy of the example bank."""
+    bank = get_bank_by_name(session, owner.id, EXAMPLE_BANK["name"])
     if bank is None:
         bank = Bank(
+            owner_id=owner.id,
             name=EXAMPLE_BANK["name"],
             description=EXAMPLE_BANK["description"],
             quiz_length=EXAMPLE_BANK["quiz_length"],

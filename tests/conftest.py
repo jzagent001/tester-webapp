@@ -2,16 +2,20 @@ import os
 
 # Must be set before app.db is imported so the lifespan never touches app.db on disk.
 os.environ["DATABASE_URL"] = "sqlite://"
+os.environ["AUTH_MODE"] = "single"
+os.environ["SINGLE_USER_EMAIL"] = "alice@example.com"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlmodel import Session  # noqa: E402
 
+from app import config  # noqa: E402
+from app.auth import get_or_create_user  # noqa: E402
 from app.crud import add_module, add_point, apply_data  # noqa: E402
 from app.csv_io import QuestionData  # noqa: E402
 from app.db import create_db_and_tables, get_session, make_engine  # noqa: E402
 from app.main import app  # noqa: E402
-from app.models import Bank, KnowledgePoint, Module, Question  # noqa: E402
+from app.models import Bank, KnowledgePoint, Module, Question, User  # noqa: E402
 
 HTMX = {"HX-Request": "true"}
 
@@ -25,6 +29,21 @@ def session():
     engine.dispose()
 
 
+@pytest.fixture(autouse=True)
+def act_as(monkeypatch):
+    """Requests are made as alice by default; `act_as("bob@example.com")` switches user.
+
+    Uses the real single-user sign-in path (app.auth), just with a different email.
+    """
+    monkeypatch.setattr(config, "AUTH_MODE", "single")
+
+    def _act_as(email: str) -> None:
+        monkeypatch.setattr(config, "SINGLE_USER_EMAIL", email)
+
+    _act_as("alice@example.com")
+    return _act_as
+
+
 @pytest.fixture
 def client(session):
     app.dependency_overrides[get_session] = lambda: session
@@ -33,12 +52,30 @@ def client(session):
 
 
 @pytest.fixture
-def bank(session) -> Bank:
-    bank = Bank(name="Test bank", quiz_length=10)
-    session.add(bank)
-    session.commit()
-    session.refresh(bank)
-    return bank
+def user(session) -> User:
+    return get_or_create_user(session, "alice@example.com")
+
+
+@pytest.fixture
+def other_user(session) -> User:
+    return get_or_create_user(session, "bob@example.com")
+
+
+@pytest.fixture
+def make_bank(session, user):
+    def _make(name="Test bank", owner: User | None = None, **fields) -> Bank:
+        bank = Bank(owner_id=(owner or user).id, name=name, **{"quiz_length": 10, **fields})
+        session.add(bank)
+        session.commit()
+        session.refresh(bank)
+        return bank
+
+    return _make
+
+
+@pytest.fixture
+def bank(make_bank) -> Bank:
+    return make_bank()
 
 
 @pytest.fixture

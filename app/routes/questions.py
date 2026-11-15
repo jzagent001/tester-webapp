@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlmodel import Session, col, select
 
+from app.auth import CurrentUser
 from app.crud import apply_data, check_classification, classification_counts
 from app.csv_io import QuestionData, validate
 from app.db import SessionDep
@@ -118,8 +119,8 @@ async def _save(request: Request, session: Session, bank: Bank, question: Questi
 
 
 @router.get("")
-def list_questions(request: Request, session: SessionDep, bank_id: int, topic: str = "", q: str = ""):
-    bank = get_bank(session, bank_id)
+def list_questions(request: Request, session: SessionDep, user: CurrentUser, bank_id: int, topic: str = "", q: str = ""):
+    bank = get_bank(session, user, bank_id)
     stmt = (
         select(Question)
         .where(Question.bank_id == bank.id)
@@ -142,8 +143,8 @@ def list_questions(request: Request, session: SessionDep, bank_id: int, topic: s
 
 
 @router.get("/new")
-def new_question(request: Request, session: SessionDep, bank_id: int, topic: str = ""):
-    bank = get_bank(session, bank_id)
+def new_question(request: Request, session: SessionDep, user: CurrentUser, bank_id: int, topic: str = ""):
+    bank = get_bank(session, user, bank_id)
     # Pre-select the topic the list was filtered by, if any.
     values = {"text": "", "explanation": "", "module_id": "", "knowledge_point_id": ""}
     kind, _, raw = topic.partition(":")
@@ -173,9 +174,9 @@ def choice_field(request: Request, bank_id: int):
 
 
 @router.get("/point-options")
-def point_options(request: Request, session: SessionDep, bank_id: int, module_id: str = ""):
+def point_options(request: Request, session: SessionDep, user: CurrentUser, bank_id: int, module_id: str = ""):
     """HTMX fragment: the knowledge-point <option>s for the chosen module."""
-    bank = get_bank(session, bank_id)
+    bank = get_bank(session, user, bank_id)
     mid = optional_int(module_id)
     points = [p for p in _points_for(session, mid) if p.module.bank_id == bank.id]
     return templates.TemplateResponse(
@@ -186,13 +187,13 @@ def point_options(request: Request, session: SessionDep, bank_id: int, module_id
 
 
 @router.post("")
-async def create_question(request: Request, session: SessionDep, bank_id: int):
-    return await _save(request, session, get_bank(session, bank_id), None)
+async def create_question(request: Request, session: SessionDep, user: CurrentUser, bank_id: int):
+    return await _save(request, session, get_bank(session, user, bank_id), None)
 
 
 @router.get("/{question_id}/edit")
-def edit_question(request: Request, session: SessionDep, bank_id: int, question_id: int):
-    bank = get_bank(session, bank_id)
+def edit_question(request: Request, session: SessionDep, user: CurrentUser, bank_id: int, question_id: int):
+    bank = get_bank(session, user, bank_id)
     question = _get_question(session, bank, question_id)
     return _render_form(
         request,
@@ -213,14 +214,14 @@ def edit_question(request: Request, session: SessionDep, bank_id: int, question_
 
 
 @router.post("/{question_id}")
-async def update_question(request: Request, session: SessionDep, bank_id: int, question_id: int):
-    bank = get_bank(session, bank_id)
+async def update_question(request: Request, session: SessionDep, user: CurrentUser, bank_id: int, question_id: int):
+    bank = get_bank(session, user, bank_id)
     return await _save(request, session, bank, _get_question(session, bank, question_id))
 
 
 @router.delete("/{question_id}", response_class=HTMLResponse)
-def delete_question(session: SessionDep, bank_id: int, question_id: int):
-    bank = get_bank(session, bank_id)
+def delete_question(session: SessionDep, user: CurrentUser, bank_id: int, question_id: int):
+    bank = get_bank(session, user, bank_id)
     session.delete(_get_question(session, bank, question_id))
     session.commit()
     # Empty body: HTMX swaps the table row out with nothing.

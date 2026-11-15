@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 from sqlmodel import col, select
 
+from app.auth import CurrentUser
 from app.crud import classification_counts, get_bank_by_name
 from app.db import SessionDep
 from app.models import Attempt, Bank
@@ -12,12 +13,12 @@ router = APIRouter(prefix="/banks/{bank_id}", tags=["banks"])
 
 
 @router.get("")
-def dashboard(request: Request, session: SessionDep, bank_id: int):
-    bank = get_bank(session, bank_id)
+def dashboard(request: Request, session: SessionDep, user: CurrentUser, bank_id: int):
+    bank = get_bank(session, user, bank_id)
     tree = topic_tree(bank, classification_counts(session, bank.id))
     attempts = session.exec(
         select(Attempt)
-        .where(Attempt.bank_id == bank.id)
+        .where(Attempt.bank_id == bank.id, Attempt.user_id == user.id)
         .order_by(col(Attempt.id).desc())
         .limit(10)
     ).all()
@@ -29,7 +30,7 @@ def dashboard(request: Request, session: SessionDep, bank_id: int):
             "tree": tree,
             "total": sum(g.count for g in tree),
             "attempts": attempts,
-            "weak": weak_points(session, bank),
+            "weak": weak_points(session, bank, user),
         },
     )
 
@@ -44,8 +45,8 @@ def _settings_page(request: Request, bank: Bank, values: dict, errors=(), status
 
 
 @router.get("/settings")
-def settings(request: Request, session: SessionDep, bank_id: int):
-    bank = get_bank(session, bank_id)
+def settings(request: Request, session: SessionDep, user: CurrentUser, bank_id: int):
+    bank = get_bank(session, user, bank_id)
     values = {
         "name": bank.name,
         "description": bank.description,
@@ -56,17 +57,17 @@ def settings(request: Request, session: SessionDep, bank_id: int):
 
 
 @router.post("/settings")
-async def save_settings(request: Request, session: SessionDep, bank_id: int):
-    bank = get_bank(session, bank_id)
+async def save_settings(request: Request, session: SessionDep, user: CurrentUser, bank_id: int):
+    bank = get_bank(session, user, bank_id)
     form = await request.form()
     values = {k: str(form.get(k, "")).strip() for k in ("name", "description", "quiz_length", "pass_mark")}
     errors = []
     if not values["name"]:
         errors.append("Name is required.")
     else:
-        other = get_bank_by_name(session, values["name"])
+        other = get_bank_by_name(session, user.id, values["name"])
         if other is not None and other.id != bank.id:
-            errors.append(f"There is already a bank called “{other.name}”.")
+            errors.append(f"You already have a bank called “{other.name}”.")
     quiz_length = optional_int(values["quiz_length"])
     if not quiz_length:
         errors.append("Default test length must be a whole number of at least 1.")
@@ -86,7 +87,7 @@ async def save_settings(request: Request, session: SessionDep, bank_id: int):
 
 
 @router.post("/delete")
-def delete_bank(session: SessionDep, bank_id: int):
-    session.delete(get_bank(session, bank_id))
+def delete_bank(session: SessionDep, user: CurrentUser, bank_id: int):
+    session.delete(get_bank(session, user, bank_id))
     session.commit()
     return RedirectResponse("/", status_code=303)

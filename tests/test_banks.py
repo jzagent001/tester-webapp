@@ -20,7 +20,7 @@ def test_create_bank(client, session):
 def test_bank_names_unique(client, bank):
     r = client.post("/banks", data={"name": "test BANK"})
     assert r.status_code == 422
-    assert "already a bank" in r.text
+    assert "already have a bank" in r.text
 
 
 def test_settings(client, session, bank):
@@ -54,7 +54,7 @@ def test_delete_bank_removes_everything(client, session, bank, topics, make_ques
         assert session.exec(select(model)).all() == []
 
 
-def test_dashboard_weak_points(client, session, bank, topics, make_question):
+def test_dashboard_weak_points(client, session, user, bank, topics, make_question):
     _, loss, dispersion = topics
     for i in range(3):
         make_question(f"loss {i}", point=loss)
@@ -69,7 +69,7 @@ def test_dashboard_weak_points(client, session, bank, topics, make_question):
         client.post(f"/quiz/{attempt_id}/q/{item.position}", data={"choice": pick})
 
     session.expire_all()
-    rows = weak_points(session, session.get(Bank, bank.id))
+    rows = weak_points(session, session.get(Bank, bank.id), user)
     assert [(label, t.correct, t.answered) for label, t in rows] == [
         ("Optics › Dispersion", 0, 3),
         ("Optics › Loss", 3, 3),

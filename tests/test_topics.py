@@ -1,4 +1,4 @@
-from app.models import Bank, KnowledgePoint, Module, Question
+from app.models import KnowledgePoint, Module, Question
 
 
 def test_create_module_and_point(client, session, bank):
@@ -57,10 +57,8 @@ def test_delete_module_makes_questions_general(client, session, bank, topics, ma
         assert (q.module_id, q.knowledge_point_id) == (None, None)
 
 
-def test_topics_of_another_bank_are_404(client, session, topics):
-    other = Bank(name="Other")
-    session.add(other)
-    session.commit()
+def test_topics_of_another_bank_are_404(client, session, topics, make_bank):
+    other = make_bank("Other")
     module, loss, _ = topics
     assert client.post(f"/banks/{other.id}/modules/{module.id}", data={"name": "x"}).status_code == 404
     assert client.post(f"/banks/{other.id}/points/{loss.id}/delete").status_code == 404

@@ -8,7 +8,13 @@ from fastapi import APIRouter, Form, Request, UploadFile
 from fastapi.responses import FileResponse, Response
 from sqlmodel import Session, col, select
 
-from app.config import DEFAULT_QUIZ_LENGTH, SAMPLE_CSV, WRITING_KIT_DIR
+from app.auth import CurrentUser
+from app.config import (
+    DEFAULT_QUIZ_LENGTH,
+    MAX_UPLOAD_BYTES,
+    SAMPLE_CSV,
+    WRITING_KIT_DIR,
+)
 from app.crud import (
     get_bank_by_name,
     import_csv_text,
@@ -17,7 +23,7 @@ from app.crud import (
 )
 from app.csv_io import HEADER, ImportResult, to_csv
 from app.db import SessionDep
-from app.models import Bank, Question
+from app.models import Bank, Question, User
 from app.templating import get_bank, is_htmx, optional_int, templates
 
 router = APIRouter(tags=["import-export"])
@@ -26,6 +32,7 @@ router = APIRouter(tags=["import-export"])
 def _render(
     request: Request,
     session: Session,
+    user: User,
     result: ImportResult | None = None,
     bank: Bank | None = None,
     selected_id: int | None = None,
@@ -35,7 +42,9 @@ def _render(
         "result": result,
         "target": bank,
         "total": question_count(session, bank.id) if bank else 0,
-        "banks": session.exec(select(Bank).order_by(Bank.name)).all(),
+        "banks": session.exec(
+            select(Bank).where(Bank.owner_id == user.id).order_by(Bank.name)
+        ).all(),
         "selected_id": selected_id,
         "header": ",".join(HEADER),
     }
@@ -44,14 +53,15 @@ def _render(
 
 
 @router.get("/import")
-def import_page(request: Request, session: SessionDep, bank: str = ""):
-    return _render(request, session, selected_id=optional_int(bank))
+def import_page(request: Request, session: SessionDep, user: CurrentUser, bank: str = ""):
+    return _render(request, session, user, selected_id=optional_int(bank))
 
 
 @router.post("/import")
 async def import_csv(
     request: Request,
     session: SessionDep,
+    user: CurrentUser,
     file: UploadFile,
     bank_id: Annotated[str, Form()] = "",
     new_bank: Annotated[str, Form()] = "",
@@ -61,12 +71,15 @@ async def import_csv(
         return _render(
             request,
             session,
+            user,
             ImportResult(errors=[message]),
             selected_id=optional_int(bank_id),
             status_code=422,
         )
 
-    raw = await file.read()
+    raw = await file.read(MAX_UPLOAD_BYTES + 1)
+    if len(raw) > MAX_UPLOAD_BYTES:
+        return fail(f"The file is larger than {MAX_UPLOAD_BYTES // (1024 * 1024)} MB. Split it into smaller files.")
     try:
         text = raw.decode("utf-8-sig")
     except UnicodeDecodeError:
@@ -75,27 +88,27 @@ async def import_csv(
     target_id = optional_int(bank_id)
     if target_id is not None:
         bank = session.get(Bank, target_id)
-        if bank is None:
+        if bank is None or bank.owner_id != user.id:
             return fail("That bank no longer exists.")
     else:
         name = new_bank.strip()
         if not name:
             return fail("Choose a bank to import into, or name a new one.")
-        bank = get_bank_by_name(session, name)
+        bank = get_bank_by_name(session, user.id, name)
         if bank is None:
-            bank = Bank(name=name, quiz_length=DEFAULT_QUIZ_LENGTH)
+            bank = Bank(owner_id=user.id, name=name, quiz_length=DEFAULT_QUIZ_LENGTH)
             session.add(bank)
             session.commit()
             session.refresh(bank)
 
     result = import_csv_text(session, bank, text, skip_duplicates)
-    return _render(request, session, result, bank=bank, selected_id=bank.id)
+    return _render(request, session, user, result, bank=bank, selected_id=bank.id)
 
 
 @router.post("/import/example")
-def import_example(request: Request, session: SessionDep):
-    bank, result = load_example_bank(session)
-    return _render(request, session, result, bank=bank, selected_id=bank.id)
+def import_example(request: Request, session: SessionDep, user: CurrentUser):
+    bank, result = load_example_bank(session, user)
+    return _render(request, session, user, result, bank=bank, selected_id=bank.id)
 
 
 @router.get("/import/sample.csv")
@@ -119,8 +132,8 @@ def writing_kit():
 
 
 @router.get("/banks/{bank_id}/export.csv")
-def export_csv(session: SessionDep, bank_id: int):
-    bank = get_bank(session, bank_id)
+def export_csv(session: SessionDep, user: CurrentUser, bank_id: int):
+    bank = get_bank(session, user, bank_id)
     questions = session.exec(
         select(Question)
         .where(Question.bank_id == bank.id)
