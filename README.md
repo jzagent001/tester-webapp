@@ -58,8 +58,8 @@ everything needed to author a bank, by hand or with an LLM:
   classification levels, single and multiple answers, 2 to 8 choices, quoting).
 - `QUESTION_WRITING_GUIDE.md`: the rules for the LLM: how to research the subject, plan
   modules and knowledge points, the CSV format, question-writing guidance and a checklist.
-- `PROMPT INSTRUCTION.md`: a prompt template that has the LLM research first, then output
-  only the CSV.
+- `PROMPT INSTRUCTION.md`: a two-step prompt template: the LLM researches and proposes a
+  topic plan for your approval, then outputs only the CSV.
 - `HOW TO USE.md`: step-by-step instructions for you: filling in the prompt, saving the
   reply, importing it and fixing rejected rows.
 
