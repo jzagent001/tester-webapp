@@ -159,10 +159,18 @@ def breakdown(bank: Bank, items: Iterable[AttemptItem]) -> list[BreakdownRow]:
     for item in items:
         by_module[item.module_id][item.knowledge_point_id].add(item)
 
+    point_order = [p.id for m in bank.modules for p in m.points]
+
     def sort_key(module_id):
         if module_id is None:
             return (2, 0)
         return (0, order.index(module_id)) if module_id in order else (1, module_id)
+
+    def point_key(point_id):
+        # Configured order first, then points deleted since, then the module's general bucket.
+        if point_id is None:
+            return (2, 0)
+        return (0, point_order.index(point_id)) if point_id in point_order else (1, point_id)
 
     rows = []
     for module_id in sorted(by_module, key=sort_key):
@@ -175,7 +183,8 @@ def breakdown(bank: Bank, items: Iterable[AttemptItem]) -> list[BreakdownRow]:
         name = GENERAL if module_id is None else module_names.get(module_id, "(deleted module)")
         row = BreakdownRow(name, total)
         if module_id is not None:
-            for point_id, tally in sorted(point_tallies.items(), key=lambda kv: kv[0] is None):
+            for point_id in sorted(point_tallies, key=point_key):
+                tally = point_tallies[point_id]
                 label = GENERAL if point_id is None else point_names.get(point_id, "(deleted)")
                 row.points.append((label, tally))
         rows.append(row)
