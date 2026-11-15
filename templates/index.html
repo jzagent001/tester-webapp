@@ -31,6 +31,13 @@
 {% endif %}
 
 <article>
+  <header><strong>Write your own question bank</strong></header>
+  <p>Download a sample bank and a guide to the CSV format. The guide is written so you can hand both
+     files to an LLM and have it write a bank you can import.</p>
+  <a href="/question-writing-kit.zip" role="button" class="secondary" download>Download the question-writing kit (.zip)</a>
+</article>
+
+<article>
   <header><strong>New bank</strong></header>
   {% if error %}<p class="wrong" role="alert">{{ error }}</p>{% endif %}
   <form method="post" action="/banks" class="inline">

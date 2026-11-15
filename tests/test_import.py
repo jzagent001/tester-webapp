@@ -92,3 +92,21 @@ def test_export_is_per_bank(client, session, bank, make_question):
     r = client.get(f"/banks/{bank.id}/export.csv")
     assert "Mine" in r.text and "Theirs" not in r.text
     assert 'filename="Test_bank.csv"' in r.headers["content-disposition"]
+
+
+def test_writing_kit_zip(client):
+    import zipfile
+
+    r = client.get("/question-writing-kit.zip")
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "application/zip"
+    names = zipfile.ZipFile(io.BytesIO(r.content)).namelist()
+    assert sorted(names) == [
+        "question writing instructions/QUESTION_WRITING_GUIDE.md",
+        "question writing instructions/sample_question_bank.csv",
+    ]
+
+
+def test_writing_kit_linked_from_home_and_import(client):
+    assert "/question-writing-kit.zip" in client.get("/").text
+    assert "/question-writing-kit.zip" in client.get("/import").text

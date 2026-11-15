@@ -58,3 +58,16 @@ def test_round_trip(session, bank, topics, make_question):
         ("Optics", "", "Q2"),
         ("", "", "Q3"),
     ]
+
+
+def test_writing_instructions_sample_is_valid():
+    """The sample in `question writing instructions/` must stay importable."""
+    from app.config import BASE_DIR
+
+    path = BASE_DIR / "question writing instructions" / "sample_question_bank.csv"
+    items, errors = parse_csv(path.read_text(encoding="utf-8"))
+    assert errors == []
+    levels = {(bool(i.module), bool(i.knowledge_point)) for i in items}
+    assert levels == {(True, True), (True, False), (False, False)}
+    assert {len(i.choices) for i in items} >= {2, 8}
+    assert any(sum(c for _, c in i.choices) > 1 for i in items)

@@ -1,12 +1,14 @@
-"""CSV import / export."""
+"""CSV import / export, plus the question-writing kit download."""
 
+import io
+import zipfile
 from typing import Annotated
 
 from fastapi import APIRouter, Form, Request, UploadFile
 from fastapi.responses import FileResponse, Response
 from sqlmodel import Session, col, select
 
-from app.config import DEFAULT_QUIZ_LENGTH, SAMPLE_CSV
+from app.config import DEFAULT_QUIZ_LENGTH, SAMPLE_CSV, WRITING_KIT_DIR
 from app.crud import (
     get_bank_by_name,
     import_csv_text,
@@ -99,6 +101,21 @@ def import_example(request: Request, session: SessionDep):
 @router.get("/import/sample.csv")
 def sample_csv():
     return FileResponse(SAMPLE_CSV, media_type="text/csv", filename="sample_questions.csv")
+
+
+@router.get("/question-writing-kit.zip")
+def writing_kit():
+    """Zip of everything in `question writing instructions/`, built fresh on each request."""
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        for path in sorted(WRITING_KIT_DIR.rglob("*")):
+            if path.is_file():
+                zf.write(path, f"{WRITING_KIT_DIR.name}/{path.relative_to(WRITING_KIT_DIR)}")
+    return Response(
+        buffer.getvalue(),
+        media_type="application/zip",
+        headers={"Content-Disposition": 'attachment; filename="question-writing-kit.zip"'},
+    )
 
 
 @router.get("/banks/{bank_id}/export.csv")

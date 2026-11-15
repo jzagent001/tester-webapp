@@ -49,6 +49,21 @@ You pick the target bank (or name a new one) on the Import page. Duplicate detec
 looks inside that bank. See `data/sample_questions.csv`, also downloadable from the Import
 page. Each bank's page has an *Export CSV* link that produces the same format.
 
+## Writing your own question bank
+
+The [`question writing instructions/`](question%20writing%20instructions/) folder has
+everything needed to author a bank, by hand or with an LLM:
+
+- `sample_question_bank.csv`: a complete, valid example that uses every feature (all three
+  classification levels, single and multiple answers, 2 to 8 choices, quoting).
+- `QUESTION_WRITING_GUIDE.md`: the format rules, how the app treats questions (choices are
+  shuffled, so avoid "all of the above"), question-writing guidance, a checklist and a
+  prompt template to give an LLM along with the sample file.
+
+The home page and the Import page have a **Download the question-writing kit** button that
+serves the whole folder as `question-writing-kit.zip`. The zip is built on each request, so
+it always matches what's in the folder.
+
 ## About the example bank
 
 `data/examples/optical_networking_*.csv` contain original practice questions written for the topics in
