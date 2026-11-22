@@ -16,6 +16,7 @@
   </div>
 </article>
 {% else %}
+{% set check_bank = bank %}{% include "banks/_length_check.html" %}
 <div class="grid">
 <article>
   <header><strong>{{ total }} questions</strong></header>

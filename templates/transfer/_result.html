@@ -5,6 +5,7 @@
   {% if result.new_modules %}<p>New modules: {{ result.new_modules|join(", ") }}.</p>{% endif %}
   {% if result.new_points %}<p>New knowledge points: {{ result.new_points|join(", ") }}.</p>{% endif %}
   {% if target and not result.imported and not result.skipped and not result.errors %}<p>No questions found in the file.</p>{% endif %}
+  {% set check_bank = target %}{% include "banks/_length_check.html" %}
   {% if result.errors %}
     <p class="wrong">{{ result.errors|length }} problem{{ 's' if result.errors|length != 1 }}:</p>
     <ul>{% for e in result.errors %}<li>{{ e }}</li>{% endfor %}</ul>

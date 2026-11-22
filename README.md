@@ -67,6 +67,10 @@ You pick the target bank (or name a new one) on the Import page. Duplicate detec
 looks inside that bank. See `data/sample_questions.csv`, also downloadable from the Import
 page. Each bank's page has an *Export CSV* link that produces the same format.
 
+After an import, and on the bank's page, the app warns when the correct choice is the longest
+in more than 1 in 3 single-answer questions (banks with at least 10 of them), and links the
+questions where it is clearly longer. LLM-written questions often have this giveaway.
+
 ## Writing your own question bank
 
 The [`question writing instructions/`](question%20writing%20instructions/) folder has

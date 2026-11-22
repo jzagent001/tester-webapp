@@ -9,6 +9,7 @@ from fastapi.responses import FileResponse, Response
 from sqlmodel import Session, col, select
 
 from app.auth import CurrentUser
+from app.checks import answer_length_bias
 from app.config import (
     DEFAULT_QUIZ_LENGTH,
     MAX_UPLOAD_BYTES,
@@ -47,6 +48,8 @@ def _render(
         ).all(),
         "selected_id": selected_id,
         "header": ",".join(HEADER),
+        # Check after an import that added questions: that is when a biased batch arrives.
+        "length_bias": answer_length_bias(session, bank.id) if bank and result and result.imported else None,
     }
     template = "transfer/_result.html" if is_htmx(request) and result else "transfer/import.html"
     return templates.TemplateResponse(request, template, context, status_code=status_code)

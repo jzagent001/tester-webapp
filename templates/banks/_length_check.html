@@ -1,0 +1,19 @@
+{# Answer-length warning. Needs `length_bias` (app.checks.LengthBias) and `check_bank`. #}
+{% if length_bias %}
+<article class="notice">
+  <p><strong>The correct answer is often the longest choice.</strong>
+    In {{ length_bias.longest }} of {{ length_bias.checked }} single-answer questions ({{ length_bias.percent }}%)
+    the correct choice is the longest, so it can be guessed from length alone. With four choices,
+    chance is about 1 in 4; aim for 1 in 10 to 1 in 4.</p>
+  {% if length_bias.clear %}
+  <p>It is clearly longer than the rest in {{ length_bias.clear|length }} question{{ 's' if length_bias.clear|length != 1 }}{{ ', for example' if length_bias.clear|length > 5 }}:</p>
+  <ul>
+    {% for q in length_bias.clear[:5] %}
+    <li><a href="/banks/{{ check_bank.id }}/questions/{{ q.id }}/edit">{{ q.text|truncate(90) }}</a></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  <small class="muted">Trim the correct choice, or make the wrong ones as long and specific.
+    The <a href="/question-writing-kit.zip">question-writing guide</a> explains how.</small>
+</article>
+{% endif %}

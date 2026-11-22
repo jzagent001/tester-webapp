@@ -3,6 +3,7 @@ from fastapi.responses import RedirectResponse
 from sqlmodel import col, select
 
 from app.auth import CurrentUser
+from app.checks import answer_length_bias
 from app.crud import classification_counts, get_bank_by_name
 from app.db import SessionDep
 from app.models import Attempt, Bank
@@ -31,6 +32,7 @@ def dashboard(request: Request, session: SessionDep, user: CurrentUser, bank_id:
             "total": sum(g.count for g in tree),
             "attempts": attempts,
             "weak": weak_points(session, bank, user),
+            "length_bias": answer_length_bias(session, bank.id),
         },
     )
 
