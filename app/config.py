@@ -14,16 +14,13 @@ DEFAULT_QUIZ_LENGTH = 20
 
 # The bundled example bank, loaded by "Load the example bank" or `python -m app.seed`.
 EXAMPLE_BANK = {
-    "name": "Optical Networking Fundamentals",
+    "name": "Quantum Physics Fundamentals",
     "description": (
-        "Original practice questions on optical networking "
-        "fundamentals: fibre, amplification, DWDM and transport networks."
+        "Introductory quantum physics, from blackbody radiation and the photoelectric effect "
+        "to spin, entanglement, Bell's theorem and basic quantum gates."
     ),
-    "quiz_length": 40,
-    "files": [
-        DATA_DIR / "examples" / "optical_networking_questions.csv",
-        DATA_DIR / "examples" / "optical_networking_hard_questions.csv",
-    ],
+    "quiz_length": 20,
+    "files": [DATA_DIR / "examples" / "quantum_physics_fundamentals.csv"],
 }
 
 # --- Sign-in -------------------------------------------------------------------------

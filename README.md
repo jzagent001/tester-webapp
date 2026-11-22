@@ -12,7 +12,7 @@ FastAPI + Jinja2 + HTMX + Pico.css (both from a CDN, no build step), stored in S
 uv sync
 export SINGLE_USER_EMAIL=you@example.com   # who you are when running locally (see "Users")
 uv run fastapi dev app/main.py             # http://127.0.0.1:8000
-uv run python -m app.seed                  # optional: load the example bank (Optical Networking Fundamentals, 110 questions)
+uv run python -m app.seed                  # optional: load the example bank (Quantum Physics Fundamentals, 100 questions)
 ```
 
 The database is `app.db` in the project root; set `DATABASE_URL` to use another. Schema
@@ -87,6 +87,7 @@ it always matches what's in the folder.
 
 ## About the example bank
 
-`data/examples/optical_networking_*.csv` contain original practice questions written for the topics in
-optical networking: fibre, amplification, DWDM and transport networks. They
-are classified by module only; add knowledge points on the bank's *Modules* page.
+`data/examples/quantum_physics_fundamentals.csv` holds 100 original questions on introductory
+quantum physics, in 6 modules and 20 knowledge points: origins of quantum theory, wave-particle
+duality, wavefunctions and measurement, simple potentials, atoms and spin, and superposition and
+entanglement. Each user who loads it gets their own copy.

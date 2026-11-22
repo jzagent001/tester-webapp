@@ -45,10 +45,10 @@ def test_duplicates_are_scoped_to_the_bank(session, bank, make_bank):
 def test_example_bank_loads_once(session, user):
     bank, result = load_example_bank(session, user)
     assert result.errors == []
-    assert result.imported == 110
-    assert len(bank.modules) == 5
+    assert result.imported == 100
+    assert len(bank.modules) == 6
     _, again = load_example_bank(session, user)
-    assert (again.imported, again.skipped) == (0, 110)
+    assert (again.imported, again.skipped) == (0, 100)
     assert len(session.exec(select(Bank)).all()) == 1
 
 

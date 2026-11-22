@@ -69,7 +69,7 @@ In `docker-compose.yml`:
 ```bash
 docker compose up -d --build
 docker logs tester-webapp                    # should end with "Application startup complete"
-docker exec tester-webapp python -m app.seed # optional: load the optical networking example bank for you
+docker exec tester-webapp python -m app.seed # optional: load the example quantum physics bank for you
 ```
 
 Open `http://<nas-ip>:8765`. Your email shows in the top bar. The Docker tab shows the container as *healthy* after about half a minute.

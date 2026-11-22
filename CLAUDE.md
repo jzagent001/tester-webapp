@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 uv sync                                   # install deps (Python 3.14)
 SINGLE_USER_EMAIL=you@example.com uv run fastapi dev app/main.py   # dev server on :8000, ./app.db
-uv run python -m app.seed [email]         # load the example optical networking bank for a user
+uv run python -m app.seed [email]         # load the example quantum physics bank for a user
 uv run python -m app.migrate              # apply migrations (also runs at startup)
 uv run alembic revision --autogenerate -m "..."   # new migration after changing app/models.py
 uv run pytest                             # all tests
