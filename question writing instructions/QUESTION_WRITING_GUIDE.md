@@ -61,7 +61,7 @@ The app **shuffles the choices** in every test and tells the user how many to pi
 
 **Choices:** use 4 by default, 2 only for true/false, and up to 8 when the topic has that many natural options. Every wrong choice should be plausible: a common misconception, a related term or a realistic miscalculation. Make sure exactly the marked ones are correct.
 
-**Don't let the wording give the answer away.** The most common giveaway is that the correct choice is the longest, because it collects the qualifiers that make it precisely true while the wrong choices are written quickly. Write the correct choice first, then make each wrong choice about as long and as specific: if the correct one has a qualifier, a number or a condition, give the wrong ones a qualifier, a number or a condition too. Trimming the correct choice works as well. Don't overcorrect: if the correct choice is never the longest, that is a giveaway too. Across the bank, the correct choice should be the longest about as often as chance (about 1 in 4 questions with four choices). Also watch for these:
+**Don't let the wording give the answer away.** The most common giveaway is that the correct choice is the longest, because it collects the qualifiers that make it precisely true while the wrong choices are written quickly. Write the correct choice first, then make each wrong choice about as long and as specific: if the correct one has a qualifier, a number or a condition, give the wrong ones a qualifier, a number or a condition too. Trimming the correct choice works as well. Don't overcorrect: if the correct choice is almost never the longest, that is a giveaway too. Across the bank, aim for the correct choice being the longest in about 1 in 10 to 1 in 4 questions (1 in 4 is chance with four choices). The low end is fine because unsure test-takers tend to lean towards the longest choice. Also watch for these:
 
 - Only the correct choice hedges ("usually", "typically") while the wrong ones say "always" or "never".
 - Only the correct choice repeats words from the question.
@@ -77,7 +77,7 @@ When the choices are names or values whose length is fixed (status codes, record
 - [ ] Every row has a question, choices `A` and `B`, and correct letters that point to non-empty choices.
 - [ ] No knowledge point without a module, and every name is spelled consistently.
 - [ ] No choice refers to other choices.
-- [ ] For each question, note which choice is longest. The correct choice is the longest in about 1 in 4 questions, not much more or less; where it is clearly longer than the rest, trim it or lengthen the wrong ones.
+- [ ] For each question, note which choice is longest. The correct choice is the longest in about 1 in 10 to 1 in 4 questions, and in no question is it clearly longer than the rest; where it is, trim it or lengthen the wrong ones.
 - [ ] Every question has an explanation, and every fact was checked against a source.
 - [ ] Each knowledge point has at least 3 questions.
 - [ ] The output is only the CSV: no Markdown fences, no notes before or after.
