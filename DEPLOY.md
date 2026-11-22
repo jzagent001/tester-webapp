@@ -24,6 +24,7 @@ Each user only ever sees their own banks and test results. **Set `SINGLE_USER_EM
 | `CF_ACCESS_TEAM_DOMAIN` | `cloudflare` | `yourteam.cloudflareaccess.com` |
 | `CF_ACCESS_AUD` | `cloudflare` | the Access application's *Application Audience (AUD) Tag* |
 | `OWNER_EMAIL` | once, only when upgrading a database created before users existed | `you@example.com` |
+| `SOURCE_URL` | optional | the "Source code" link in the footer; defaults to this project's GitHub repository. Point it at your copy if you run a modified version (the AGPL requires offering users its source) |
 | `DATABASE_URL` | optional | defaults to `sqlite:////data/app.db` in the container |
 
 The container refuses to start if the settings for its mode are missing, and says which.

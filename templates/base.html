@@ -35,6 +35,7 @@
     .tree fieldset { margin-bottom: 1rem; }
     .tree .leaves { padding-left: 1.75rem; }
     tr.sub td:first-child { padding-left: 2rem; }
+    footer.site { border-top: 1px solid var(--pico-muted-border-color); padding-block: 1rem; }
     nav.bank-nav { border-bottom: 1px solid var(--pico-muted-border-color); margin-bottom: 1.5rem; }
   </style>
 </head>
@@ -66,5 +67,8 @@
   <main class="container">
     {% block content %}{% endblock %}
   </main>
+  <footer class="container site">
+    <small class="muted">Self-Test is free software under the AGPL-3.0. <a href="{{ source_url() }}">Source code</a></small>
+  </footer>
 </body>
 </html>

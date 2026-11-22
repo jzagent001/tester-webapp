@@ -35,6 +35,10 @@ CF_ACCESS_AUD = os.environ.get("CF_ACCESS_AUD", "").strip()  # the Access applic
 
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024
 
+# Shown in the page footer. The AGPL requires a modified version that people use over a
+# network to offer them its source, so anyone running a fork should point this at theirs.
+SOURCE_URL = os.environ.get("SOURCE_URL", "").strip() or "https://github.com/jzagent001/tester-webapp"
+
 
 def settings_errors() -> list[str]:
     """Problems that stop the app from starting."""

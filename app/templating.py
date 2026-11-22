@@ -10,6 +10,7 @@ from app.models import Bank, User
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 templates.env.globals["LETTERS"] = LETTERS
 templates.env.globals["auth_mode"] = lambda: config.AUTH_MODE
+templates.env.globals["source_url"] = lambda: config.SOURCE_URL
 
 
 def is_htmx(request: Request) -> bool:

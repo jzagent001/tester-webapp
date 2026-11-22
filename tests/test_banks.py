@@ -10,6 +10,14 @@ def test_home_empty(client):
     assert "Load the example bank" in r.text
 
 
+def test_footer_links_to_source(client, monkeypatch):
+    from app import config
+
+    assert 'href="https://github.com/jzagent001/tester-webapp">Source code' in client.get("/").text
+    monkeypatch.setattr(config, "SOURCE_URL", "https://example.com/fork")
+    assert 'href="https://example.com/fork">Source code' in client.get("/").text
+
+
 def test_create_bank(client, session):
     r = client.post("/banks", data={"name": "CCNA"}, follow_redirects=False)
     assert r.status_code == 303
