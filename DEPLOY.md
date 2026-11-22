@@ -43,21 +43,10 @@ Use the **cache pool path** (`/mnt/cache/...`), or an appdata share set to *excl
 
 ### 2. Get the image onto the NAS
 
-**Option A, clone with git and build on the NAS (simplest to update).** The repository is private, so give the NAS a read-only *deploy key*. In the Unraid terminal:
+**Option A, clone with git and build on the NAS (simplest to update).** In the Unraid terminal:
 
 ```bash
-mkdir -p /boot/config/ssh
-ssh-keygen -t ed25519 -f /boot/config/ssh/tester-webapp -N ""
-cat /boot/config/ssh/tester-webapp.pub
-```
-
-The key lives on the flash drive because Unraid resets `/root` (and `~/.ssh`) on every reboot. On GitHub, open the repository's **Settings → Deploy keys → Add deploy key**, paste the printed key and leave *Allow write access* unticked. Then clone:
-
-```bash
-GIT_SSH_COMMAND="ssh -i /boot/config/ssh/tester-webapp" \
-  git clone git@github.com:jzagent001/tester-webapp.git /mnt/cache/appdata/tester-webapp-src
-cd /mnt/cache/appdata/tester-webapp-src
-git config core.sshCommand "ssh -i /boot/config/ssh/tester-webapp"
+git clone https://github.com/jzagent001/tester-webapp.git /mnt/cache/appdata/tester-webapp-src
 ```
 
 Recent Unraid releases include `git`; if yours doesn't, install it from Community Applications. Configure as in step 3, then run `docker compose up -d --build`, or install the *Docker Compose Manager* plugin, add a stack pointing at that folder and press **Compose Up**. Either way the NAS builds the image and starts the container.
