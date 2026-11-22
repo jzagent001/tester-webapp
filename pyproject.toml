@@ -3,6 +3,8 @@ name = "tester-webapp"
 version = "0.1.0"
 description = "Multiple-choice self-test app for any question bank, organised by module and knowledge point"
 readme = "README.md"
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE"]
 requires-python = ">=3.14"
 dependencies = [
     "alembic>=1.20.1",

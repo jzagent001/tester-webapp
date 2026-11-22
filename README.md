@@ -91,3 +91,9 @@ it always matches what's in the folder.
 quantum physics, in 6 modules and 20 knowledge points: origins of quantum theory, wave-particle
 duality, wavefunctions and measurement, simple potentials, atoms and spin, and superposition and
 entanglement. Each user who loads it gets their own copy.
+
+## Licence
+
+Copyright (C) 2026 jzagent001. Licensed under the [GNU Affero General Public License v3.0 or
+later](LICENSE). You may use, change and host it, but if you run a modified version that other
+people use over a network, you must offer them its source code under the same licence.
