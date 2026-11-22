@@ -1,5 +1,6 @@
 # For Unraid's "Docker Compose Manager" plugin, or `docker compose up -d --build`.
-# See DEPLOY.md for the full walk-through.
+# See DEPLOY.md for the full walk-through. Put your own settings in
+# docker-compose.override.yml (git-ignored, merged in automatically) rather than here.
 services:
   tester-webapp:
     build: .
@@ -16,7 +17,7 @@ services:
       # --- Phase 1: LAN trial, everyone is you ---
       AUTH_MODE: single
       SINGLE_USER_EMAIL: you@example.com     # the email you'll later sign in with
-      # --- Phase 2: behind Cloudflare Access (comment out the two lines above) ---
+      # --- Phase 2: behind Cloudflare Access (set these in the override file) ---
       # AUTH_MODE: cloudflare
       # CF_ACCESS_TEAM_DOMAIN: yourteam.cloudflareaccess.com
       # CF_ACCESS_AUD: paste-the-application-audience-tag-here

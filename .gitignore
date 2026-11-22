@@ -15,3 +15,6 @@ app.db
 app.db-shm
 app.db-wal
 *.db.bak
+
+# Per-machine Docker settings (see DEPLOY.md)
+docker-compose.override.yml

@@ -43,7 +43,26 @@ Use the **cache pool path** (`/mnt/cache/...`), or an appdata share set to *excl
 
 ### 2. Get the image onto the NAS
 
-**Option A, build on the NAS (simplest).** Copy this project folder to the NAS (e.g. to `/mnt/cache/appdata/tester-webapp-src` over the network share), then install the *Docker Compose Manager* plugin from Community Applications, add a stack pointing at that folder, edit `docker-compose.yml` (see step 3) and press **Compose Up**. It builds the image and starts the container. From the terminal instead: `cd /mnt/cache/appdata/tester-webapp-src && docker compose up -d --build`.
+**Option A, clone with git and build on the NAS (simplest to update).** The repository is private, so give the NAS a read-only *deploy key*. In the Unraid terminal:
+
+```bash
+mkdir -p /boot/config/ssh
+ssh-keygen -t ed25519 -f /boot/config/ssh/tester-webapp -N ""
+cat /boot/config/ssh/tester-webapp.pub
+```
+
+The key lives on the flash drive because Unraid resets `/root` (and `~/.ssh`) on every reboot. On GitHub, open the repository's **Settings → Deploy keys → Add deploy key**, paste the printed key and leave *Allow write access* unticked. Then clone:
+
+```bash
+GIT_SSH_COMMAND="ssh -i /boot/config/ssh/tester-webapp" \
+  git clone git@github.com:jzagent001/tester-webapp.git /mnt/cache/appdata/tester-webapp-src
+cd /mnt/cache/appdata/tester-webapp-src
+git config core.sshCommand "ssh -i /boot/config/ssh/tester-webapp"
+```
+
+Recent Unraid releases include `git`; if yours doesn't, install it from Community Applications. Configure as in step 3, then run `docker compose up -d --build`, or install the *Docker Compose Manager* plugin, add a stack pointing at that folder and press **Compose Up**. Either way the NAS builds the image and starts the container.
+
+You can also copy the project folder over the network share instead of cloning; then updating means copying it again.
 
 **Option B, build on your PC and copy the image.**
 
@@ -58,10 +77,18 @@ Then use the compose file with its `build: .` line removed. Podman names the ima
 
 ### 3. Configure
 
-In `docker-compose.yml`:
+Don't edit `docker-compose.yml` itself: put your settings in `docker-compose.override.yml` next to it. Docker Compose merges that file in automatically, and git ignores it, so `git pull` never conflicts with your settings.
 
-- `SINGLE_USER_EMAIL`: your email, lower-case.
-- `ports`: `8765:8000` serves the app on `http://<nas-ip>:8765`. Change `8765` if it's taken.
+```yaml
+services:
+  tester-webapp:
+    environment:
+      SINGLE_USER_EMAIL: you@example.com     # your email, lower-case
+```
+
+The defaults in `docker-compose.yml`:
+
+- `ports`: `8765:8000` serves the app on `http://<nas-ip>:8765`. If `8765` is taken, replace the list in the override with `ports: !override ["9000:8000"]` (a plain `ports:` would add to the list rather than replace it; `!override` needs Docker Compose 2.24.4 or later).
 - `volumes`: the folder from step 1.
 
 ### 4. Start and check
@@ -97,13 +124,18 @@ After saving, open the application's settings and copy the **Application Audienc
 
 ### 3. Switch the app to Cloudflare mode
 
-In `docker-compose.yml`, comment out the two `single` lines and set:
+In `docker-compose.override.yml`, set:
 
 ```yaml
-AUTH_MODE: cloudflare
-CF_ACCESS_TEAM_DOMAIN: yourteam.cloudflareaccess.com
-CF_ACCESS_AUD: <the AUD tag>
+services:
+  tester-webapp:
+    environment:
+      AUTH_MODE: cloudflare
+      CF_ACCESS_TEAM_DOMAIN: yourteam.cloudflareaccess.com
+      CF_ACCESS_AUD: <the AUD tag>
 ```
+
+These replace the `single` setting from `docker-compose.yml`. `SINGLE_USER_EMAIL` can stay; it's ignored in this mode.
 
 Then `docker compose up -d`. Visit `https://selftest.yourdomain.com`: Cloudflare asks for your email, sends a code, and you land in the app with the banks from your trial (as long as the email matches `SINGLE_USER_EMAIL` from phase 1).
 
@@ -116,8 +148,10 @@ Add their emails to the Access policy and send them the link. They sign in with 
 ## Updating
 
 1. Back up (below).
-2. Copy the new code to the NAS (option A) or load the new image (option B).
+2. Get the new code: `git pull` in `/mnt/cache/appdata/tester-webapp-src` (option A), or load the new image (option B).
 3. `docker compose up -d --build`.
+
+The database is in `/mnt/cache/appdata/tester-webapp`, outside the source folder, so pulling and rebuilding don't touch it.
 
 Database migrations run automatically when the container starts. A failed migration leaves the database unchanged and the container stops with the reason in `docker logs`.
 
